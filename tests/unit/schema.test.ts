@@ -86,4 +86,27 @@ describe("initial schema", () => {
       client.release();
     }
   });
+
+  it("enables RLS on all three tables", async () => {
+    const rows = await query<{ relname: string; relrowsecurity: boolean }>(
+      `SELECT c.relname, c.relrowsecurity
+         FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+         WHERE n.nspname = 'public' AND c.relname IN ('players', 'games', 'rsvps')`
+    );
+    expect(rows).toHaveLength(3);
+    expect(rows.every((r) => r.relrowsecurity)).toBe(true);
+  });
+
+  it("has expected RLS policies", async () => {
+    const rows = await query<{ tablename: string; policyname: string; cmd: string }>(
+      `SELECT tablename, policyname, cmd FROM pg_policies WHERE schemaname = 'public'`
+    );
+    const byTable: Record<string, string[]> = {};
+    for (const r of rows) {
+      (byTable[r.tablename] ??= []).push(`${r.cmd}:${r.policyname}`);
+    }
+    expect(byTable.players?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(byTable.games?.length ?? 0).toBeGreaterThanOrEqual(1);
+    expect(byTable.rsvps?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
 });

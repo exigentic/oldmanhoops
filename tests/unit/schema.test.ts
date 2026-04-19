@@ -105,8 +105,17 @@ describe("initial schema", () => {
     for (const r of rows) {
       (byTable[r.tablename] ??= []).push(`${r.cmd}:${r.policyname}`);
     }
-    expect(byTable.players?.length ?? 0).toBeGreaterThanOrEqual(3);
-    expect(byTable.games?.length ?? 0).toBeGreaterThanOrEqual(1);
-    expect(byTable.rsvps?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(byTable.players?.sort()).toEqual([
+      "DELETE:players_delete_own",
+      "SELECT:players_select_authenticated",
+      "UPDATE:players_update_own",
+    ]);
+    expect(byTable.games?.sort()).toEqual(["SELECT:games_select_anyone"]);
+    expect(byTable.rsvps?.sort()).toEqual([
+      "DELETE:rsvps_delete_own",
+      "INSERT:rsvps_insert_own",
+      "SELECT:rsvps_select_anyone",
+      "UPDATE:rsvps_update_own",
+    ]);
   });
 });

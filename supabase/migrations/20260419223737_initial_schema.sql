@@ -30,3 +30,5 @@ CREATE TABLE public.rsvps (
   responded_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (game_id, player_id)
 );
+
+CREATE INDEX rsvps_player_id_idx ON public.rsvps(player_id);

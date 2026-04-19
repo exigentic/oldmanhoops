@@ -1,19 +1,23 @@
 /**
  * @jest-environment node
  */
-import { Client } from "pg";
+import { Pool } from "pg";
 
-const CONN = "postgresql://postgres:postgres@127.0.0.1:55322/postgres";
+const CONN = process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:55322/postgres";
+
+let pool: Pool;
+
+beforeAll(() => {
+  pool = new Pool({ connectionString: CONN });
+});
+
+afterAll(async () => {
+  await pool.end();
+});
 
 async function query<T = any>(sql: string, params: unknown[] = []): Promise<T[]> {
-  const client = new Client({ connectionString: CONN });
-  await client.connect();
-  try {
-    const res = await client.query(sql, params);
-    return res.rows as T[];
-  } finally {
-    await client.end();
-  }
+  const res = await pool.query(sql, params);
+  return res.rows as T[];
 }
 
 describe("initial schema", () => {
@@ -57,9 +61,9 @@ describe("initial schema", () => {
   });
 
   it("enforces rsvps.status CHECK constraint", async () => {
-    const client = new Client({ connectionString: CONN });
-    await client.connect();
+    const client = await pool.connect();
     try {
+      await client.query("BEGIN");
       const gameRes = await client.query(
         `INSERT INTO games (game_date) VALUES ('2099-01-01') RETURNING id`
       );
@@ -78,11 +82,8 @@ describe("initial schema", () => {
         )
       ).rejects.toThrow(/check constraint/i);
     } finally {
-      await client.query(
-        `DELETE FROM games WHERE game_date = '2099-01-01';
-         DELETE FROM auth.users WHERE email = 'test-check@example.com';`
-      );
-      await client.end();
+      await client.query("ROLLBACK");
+      client.release();
     }
   });
 });

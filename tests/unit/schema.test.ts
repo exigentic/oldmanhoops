@@ -140,4 +140,48 @@ describe("initial schema", () => {
       client.release();
     }
   });
+
+  it("defaults players.name to empty string when raw_user_meta_data is null", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, aud, role)
+           VALUES (gen_random_uuid(), 'null-meta@example.com', '', now(), 'authenticated', 'authenticated')
+           RETURNING id`
+      );
+      const userId = res.rows[0].id;
+      const playerRes = await client.query(
+        `SELECT name FROM public.players WHERE id = $1`,
+        [userId]
+      );
+      expect(playerRes.rows).toHaveLength(1);
+      expect(playerRes.rows[0].name).toBe("");
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
+
+  it("defaults players.name to empty string when raw_user_meta_data lacks a name key", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, aud, role, raw_user_meta_data)
+           VALUES (gen_random_uuid(), 'no-name-key@example.com', '', now(), 'authenticated', 'authenticated', '{}'::jsonb)
+           RETURNING id`
+      );
+      const userId = res.rows[0].id;
+      const playerRes = await client.query(
+        `SELECT name FROM public.players WHERE id = $1`,
+        [userId]
+      );
+      expect(playerRes.rows).toHaveLength(1);
+      expect(playerRes.rows[0].name).toBe("");
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
 });

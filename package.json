@@ -33,6 +33,7 @@
     "@types/react-dom": "^19",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
+    "supabase": "^2.92.1",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"

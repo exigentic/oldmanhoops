@@ -118,4 +118,26 @@ describe("initial schema", () => {
       "UPDATE:rsvps_update_own",
     ]);
   });
+
+  it("auto-creates a players row when an auth user is inserted", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, aud, role, raw_user_meta_data)
+           VALUES (gen_random_uuid(), 'trigger-test@example.com', '', now(), 'authenticated', 'authenticated', '{"name":"Trigger Test"}'::jsonb)
+           RETURNING id`
+      );
+      const userId = res.rows[0].id;
+      const playerRes = await client.query(
+        `SELECT name FROM public.players WHERE id = $1`,
+        [userId]
+      );
+      expect(playerRes.rows).toHaveLength(1);
+      expect(playerRes.rows[0].name).toBe("Trigger Test");
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
 });

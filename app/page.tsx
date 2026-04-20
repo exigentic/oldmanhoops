@@ -31,7 +31,7 @@ export default async function Home({
         <Image src="/omh.svg" alt="Old Man Hoops" width={56} height={56} />
         <div className="flex flex-col leading-tight">
           <h1 className="text-2xl font-bold text-amber-600">Old Man Hoops</h1>
-          <p className="text-sm text-neutral-600">One Athletics at Noon</p>
+          <p className="text-sm text-neutral-600">M-F, Noon @ One Athletics</p>
           <p className="text-sm text-neutral-500 mt-0.5">{formatGameDate(today)}</p>
         </div>
       </header>

@@ -23,12 +23,16 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  let body: PostBody;
+  let raw: unknown;
   try {
-    body = await request.json();
+    raw = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return NextResponse.json({ error: "body must be a JSON object" }, { status: 400 });
+  }
+  const body = raw as PostBody;
 
   const { status, guests = 0, note = null } = body;
   if (!status || !VALID_STATUSES.has(status)) {

@@ -86,14 +86,30 @@ describe("GET /api/cron/housekeeping", () => {
     expect(data?.status).toBe("scheduled");
   });
 
-  it("is idempotent when run twice on the same day", async () => {
+  it("is idempotent; gameCreated is true on first run and false on second", async () => {
+    const today = getToday();
+    const { DateTime } = await import("luxon");
+    const weekday = DateTime.fromFormat(today, "yyyy-MM-dd", {
+      zone: process.env.APP_TIMEZONE,
+    }).weekday;
+
     const headers = { Authorization: `Bearer ${CRON_SECRET}` };
     const first = await GET(makeRequest(headers));
     expect(first.status).toBe(200);
+    const firstBody = await first.json();
     const second = await GET(makeRequest(headers));
     expect(second.status).toBe(200);
+    const secondBody = await second.json();
 
-    const today = getToday();
+    if (weekday >= 6) {
+      // Weekend: neither run creates a row
+      expect(firstBody.gameCreated).toBe(false);
+      expect(secondBody.gameCreated).toBe(false);
+    } else {
+      expect(firstBody.gameCreated).toBe(true);
+      expect(secondBody.gameCreated).toBe(false);
+    }
+
     const admin = createAdminClient();
     const { data } = await admin.from("games").select("id").eq("game_date", today);
     expect((data ?? []).length).toBeLessThanOrEqual(1);

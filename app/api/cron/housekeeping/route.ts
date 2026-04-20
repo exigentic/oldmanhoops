@@ -31,14 +31,19 @@ export async function GET(request: Request): Promise<Response> {
     let gameCreated = false;
     const todayIsGameDay = isGameDay(today);
     if (todayIsGameDay) {
-      const { error: upsertErr } = await admin
+      const { data: existing, error: existErr } = await admin
         .from("games")
-        .upsert(
-          { game_date: today, status: "scheduled" },
-          { onConflict: "game_date", ignoreDuplicates: true }
-        );
-      if (upsertErr) throw new Error(`upsertErr: ${upsertErr.message}`);
-      gameCreated = true;
+        .select("id")
+        .eq("game_date", today)
+        .maybeSingle();
+      if (existErr) throw new Error(`existErr: ${existErr.message}`);
+      if (!existing) {
+        const { error: insertErr } = await admin
+          .from("games")
+          .insert({ game_date: today, status: "scheduled" });
+        if (insertErr) throw new Error(`insertErr: ${insertErr.message}`);
+        gameCreated = true;
+      }
     }
 
     return NextResponse.json({

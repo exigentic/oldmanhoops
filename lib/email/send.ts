@@ -13,26 +13,31 @@ export async function sendEmail(
   subject: string,
   html: string
 ): Promise<{ id?: string; error?: string }> {
-  const resend = getClient();
-  const { data, error } = await resend.emails.send({
-    from: env.EMAIL_FROM,
-    to,
-    subject,
-    html,
-  });
-  if (error) return { error: error.message };
-  return { id: data?.id };
+  try {
+    const resend = getClient();
+    const { data, error } = await resend.emails.send({
+      from: env.EMAIL_FROM,
+      to,
+      subject,
+      html,
+    });
+    if (error) return { error: error.message };
+    return { id: data?.id };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 export async function notifyAdmin(subject: string, body: string): Promise<void> {
   try {
     const resend = getClient();
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: env.EMAIL_FROM,
       to: env.ADMIN_EMAIL,
       subject: `[OldManHoops admin] ${subject}`,
       text: body,
     });
+    if (error) console.error("notifyAdmin failed:", error.message);
   } catch (err) {
     console.error("notifyAdmin failed:", err);
   }

@@ -1,6 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+function useFlashValue<T>(durationMs: number) {
+  const [value, setValue] = useState<T | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+  const flash = useCallback(
+    (v: T) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setValue(v);
+      timerRef.current = setTimeout(() => {
+        setValue(null);
+        timerRef.current = null;
+      }, durationMs);
+    },
+    [durationMs]
+  );
+  return [value, flash] as const;
+}
 
 interface SettingsFormProps {
   initialName: string;
@@ -41,7 +63,7 @@ export function SettingsForm({
   // Name section
   const [name, setName] = useState(initialName);
   const [nameSaving, setNameSaving] = useState(false);
-  const [nameSaved, setNameSaved] = useState(false);
+  const [nameSaved, flashNameSaved] = useFlashValue<true>(2000);
   const [nameError, setNameError] = useState<string | null>(null);
 
   async function saveName() {
@@ -52,8 +74,7 @@ export function SettingsForm({
     const r = await postJson("/api/profile", { name: trimmed });
     setNameSaving(false);
     if (r.ok) {
-      setNameSaved(true);
-      setTimeout(() => setNameSaved(false), 2000);
+      flashNameSaved(true);
     } else {
       setNameError(r.error ?? "Update failed");
     }
@@ -81,7 +102,7 @@ export function SettingsForm({
   const [reminder, setReminder] = useState(initialReminderEmail);
   const [active, setActive] = useState(initialActive);
   const [toggleSaving, setToggleSaving] = useState<"reminder" | "active" | null>(null);
-  const [toggleSaved, setToggleSaved] = useState<"reminder" | "active" | null>(null);
+  const [toggleSaved, flashToggleSaved] = useFlashValue<"reminder" | "active">(2000);
   const [toggleError, setToggleError] = useState<string | null>(null);
 
   async function toggleField(
@@ -97,8 +118,7 @@ export function SettingsForm({
     const r = await postJson("/api/profile", { [field]: next });
     setToggleSaving(null);
     if (r.ok) {
-      setToggleSaved(key);
-      setTimeout(() => setToggleSaved(null), 2000);
+      flashToggleSaved(key);
     } else {
       // Revert optimistic state on failure
       if (field === "reminder_email") setReminder(!next);

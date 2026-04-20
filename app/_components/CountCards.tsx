@@ -19,20 +19,20 @@ const CARDS: CardConfig[] = [
     selectedClass: "bg-emerald-100 border-emerald-500 ring-2 ring-emerald-500",
   },
   {
-    key: "out",
-    title: "Out",
-    valueClass: "text-red-700",
-    titleClass: "text-red-700",
-    baseClass: "bg-red-50 border-red-200",
-    selectedClass: "bg-red-100 border-red-500 ring-2 ring-red-500",
-  },
-  {
     key: "maybe",
     title: "Maybe",
     valueClass: "text-yellow-700",
     titleClass: "text-yellow-700",
     baseClass: "bg-yellow-50 border-yellow-200",
     selectedClass: "bg-yellow-100 border-yellow-500 ring-2 ring-yellow-500",
+  },
+  {
+    key: "out",
+    title: "Out",
+    valueClass: "text-red-700",
+    titleClass: "text-red-700",
+    baseClass: "bg-red-50 border-red-200",
+    selectedClass: "bg-red-100 border-red-500 ring-2 ring-red-500",
   },
 ];
 

@@ -126,6 +126,7 @@ export function SettingsForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={50}
+          autoComplete="name"
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
         <div className="flex items-center gap-3">
@@ -136,7 +137,9 @@ export function SettingsForm({
           >
             {nameSaving ? "Saving…" : "Save name"}
           </button>
-          {nameSaved && <span className="text-emerald-600 text-sm">Saved ✓</span>}
+          <span aria-live="polite" className="text-sm">
+            {nameSaved && <span className="text-emerald-600">Saved ✓</span>}
+          </span>
         </div>
         {nameError && (
           <p role="alert" className="text-sm text-red-600">
@@ -161,6 +164,7 @@ export function SettingsForm({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
         <button
@@ -188,7 +192,7 @@ export function SettingsForm({
       </form>
 
       {/* Toggles */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3" aria-live="polite">
         <label className="flex items-center gap-2 text-sm text-neutral-700">
           <input
             type="checkbox"

@@ -2,10 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { Scoreboard } from "@/app/_components/Scoreboard";
 import type { ScoreboardData } from "@/lib/scoreboard";
 
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: jest.fn(), push: jest.fn() }),
-}));
-
 describe("Scoreboard", () => {
   afterEach(() => {
     (global.fetch as jest.Mock | undefined)?.mockReset?.();

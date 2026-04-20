@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import type { CurrentRsvp, RsvpStatus } from "@/lib/scoreboard";
 
 const STATUSES: { key: RsvpStatus; label: string; activeClass: string }[] = [
@@ -13,11 +12,12 @@ const STATUSES: { key: RsvpStatus; label: string; activeClass: string }[] = [
 export function RsvpControls({
   current,
   focusNoteOnMount = false,
+  onUpdated,
 }: {
   current: CurrentRsvp | null;
   focusNoteOnMount?: boolean;
+  onUpdated?: () => void;
 }) {
-  const router = useRouter();
   const [status, setStatus] = useState<RsvpStatus | null>(current?.status ?? null);
   const [guests, setGuests] = useState<number>(current?.guests ?? 0);
   const [note, setNote] = useState<string>(current?.note ?? "");
@@ -54,7 +54,7 @@ export function RsvpControls({
         setError(data.error ?? "Update failed");
         return;
       }
-      router.refresh();
+      onUpdated?.();
     } finally {
       setSubmitting(false);
     }

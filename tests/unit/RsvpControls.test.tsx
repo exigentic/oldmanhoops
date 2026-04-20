@@ -2,10 +2,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RsvpControls } from "@/app/_components/RsvpControls";
 
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: jest.fn(), push: jest.fn() }),
-}));
-
 describe("RsvpControls", () => {
   beforeEach(() => {
     global.fetch = jest.fn().mockResolvedValue({
@@ -51,5 +47,13 @@ describe("RsvpControls", () => {
     render(<RsvpControls current={{ status: "in", guests: 0, note: null }} />);
     const minus = screen.getByRole("button", { name: /decrement/i });
     expect(minus).toBeDisabled();
+  });
+
+  it("calls onUpdated after a successful submit", async () => {
+    const onUpdated = jest.fn();
+    const user = userEvent.setup();
+    render(<RsvpControls current={null} onUpdated={onUpdated} />);
+    await user.click(screen.getByRole("button", { name: /^in$/i }));
+    expect(onUpdated).toHaveBeenCalled();
   });
 });

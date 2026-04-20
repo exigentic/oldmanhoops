@@ -6,7 +6,7 @@ const STATUSES: RsvpStatus[] = ["in", "out", "maybe"];
 const LABELS: Record<RsvpStatus, { label: string; bg: string }> = {
   in: { label: "I'm In", bg: "#059669" },
   out: { label: "I'm Out", bg: "#dc2626" },
-  maybe: { label: "Maybe", bg: "#0284c7" },
+  maybe: { label: "Maybe", bg: "#a16207" },
 };
 
 interface ReminderInput {

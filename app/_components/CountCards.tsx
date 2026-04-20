@@ -29,10 +29,10 @@ const CARDS: CardConfig[] = [
   {
     key: "maybe",
     title: "Maybe",
-    valueClass: "text-sky-700",
-    titleClass: "text-sky-700",
-    baseClass: "bg-sky-50 border-sky-200",
-    selectedClass: "bg-sky-100 border-sky-500 ring-2 ring-sky-500",
+    valueClass: "text-yellow-700",
+    titleClass: "text-yellow-700",
+    baseClass: "bg-yellow-50 border-yellow-200",
+    selectedClass: "bg-yellow-100 border-yellow-500 ring-2 ring-yellow-500",
   },
 ];
 

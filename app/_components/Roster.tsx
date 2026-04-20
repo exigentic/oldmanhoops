@@ -4,7 +4,7 @@ const ORDER: RosterEntry["status"][] = ["in", "maybe", "out"];
 const LABEL: Record<RosterEntry["status"], string> = { in: "In", out: "Out", maybe: "Maybe" };
 const HEADING_CLASS: Record<RosterEntry["status"], string> = {
   in: "text-emerald-700",
-  maybe: "text-sky-700",
+  maybe: "text-yellow-700",
   out: "text-red-700",
 };
 

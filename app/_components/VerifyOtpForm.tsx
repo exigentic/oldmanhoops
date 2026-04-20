@@ -54,6 +54,8 @@ export function VerifyOtpForm({
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"
+          maxLength={6}
+          pattern="[0-9]{6}"
           value={token}
           onChange={(e) => setToken(e.target.value)}
           required

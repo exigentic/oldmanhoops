@@ -157,8 +157,12 @@ export function RsvpControls({
             }
           }}
           placeholder="e.g., running 15 min late"
+          aria-describedby="rsvp-note-hint"
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
+        <span id="rsvp-note-hint" className="sr-only">
+          Press Enter or tab away to save.
+        </span>
       </div>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </section>

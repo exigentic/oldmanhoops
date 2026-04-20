@@ -18,8 +18,11 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
     <div className="flex flex-col gap-4 w-full">
       {ORDER.map((status) =>
         grouped[status].length === 0 ? null : (
-          <section key={status}>
-            <h2 className={`text-sm font-semibold uppercase tracking-wide mb-2 ${HEADING_CLASS[status]}`}>
+          <section key={status} aria-labelledby={`roster-${status}`}>
+            <h2
+              id={`roster-${status}`}
+              className={`text-sm font-semibold uppercase tracking-wide mb-2 ${HEADING_CLASS[status]}`}
+            >
               {LABEL[status]}
             </h2>
             <ul className="flex flex-col gap-2 text-neutral-900">

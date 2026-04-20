@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getToday, isGameDay } from "@/lib/date";
-import { env } from "@/lib/env";
 import { notifyAdmin } from "@/lib/email/send";
-
-function checkAuth(request: Request): boolean {
-  const header = request.headers.get("authorization") ?? "";
-  const expected = `Bearer ${env.CRON_SECRET}`;
-  return header === expected;
-}
+import { requireCronAuth } from "@/lib/cron-auth";
 
 export async function GET(request: Request): Promise<Response> {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const unauthorized = requireCronAuth(request);
+  if (unauthorized) return unauthorized;
 
   try {
     const admin = createAdminClient();

@@ -9,6 +9,10 @@ const config: Config = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: { "^@/(.*)$": "<rootDir>/$1" },
   testMatch: ["<rootDir>/tests/unit/**/*.test.ts", "<rootDir>/tests/unit/**/*.test.tsx"],
+  // Integration tests share a single local Supabase DB; running workers in
+  // parallel causes cross-file races (e.g., one test deletes today's game
+  // while another is writing it). Serialize to keep tests deterministic.
+  maxWorkers: 1,
 };
 
 export default createJestConfig(config);

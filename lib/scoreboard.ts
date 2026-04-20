@@ -1,5 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+// Supabase can return the joined `players` relation as either an object or a
+// single-element array depending on the client's type inference path. The
+// `!inner` join guarantees a row exists at runtime, so an unexpected shape
+// indicates a data integrity problem — throw rather than silently emit "".
+function extractJoinedName(players: unknown): string {
+  if (Array.isArray(players) && players.length > 0 && typeof players[0]?.name === "string") {
+    return players[0].name;
+  }
+  if (players && typeof players === "object" && "name" in players && typeof (players as { name: unknown }).name === "string") {
+    return (players as { name: string }).name;
+  }
+  throw new Error("rsvp row missing joined player name");
+}
+
 export type RsvpStatus = "in" | "out" | "maybe";
 
 export interface RosterEntry {
@@ -53,10 +67,8 @@ export async function getTodayScoreboard(
     else if (r.status === "out") outCount += 1;
 
     if (opts.includeRoster) {
-      // Supabase returns the joined players relation as an object (not array) for !inner
-      const name = Array.isArray(r.players) ? r.players[0]?.name : (r.players as { name: string } | null)?.name;
       roster.push({
-        name: name ?? "",
+        name: extractJoinedName(r.players),
         status: r.status as RsvpStatus,
         guests,
         note: r.note ?? null,

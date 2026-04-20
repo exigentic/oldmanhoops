@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { VerifyOtpForm } from "@/app/_components/VerifyOtpForm";
 
 export function SignupForm({ initialCode }: { initialCode: string }) {
   const [name, setName] = useState("");
@@ -8,7 +9,7 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
   const [code, setCode] = useState(initialCode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,19 +25,15 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
       if (!res.ok) {
         setError(data.error ?? "Signup failed");
       } else {
-        setSuccess(true);
+        setSent(true);
       }
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (success) {
-    return (
-      <p className="text-neutral-200">
-        Check your email for a sign-in link.
-      </p>
-    );
+  if (sent) {
+    return <VerifyOtpForm email={email} type="invite" />;
   }
 
   return (

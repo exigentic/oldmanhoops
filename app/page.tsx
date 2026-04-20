@@ -44,12 +44,17 @@ export default async function Home({
         />
 
         {!user && (
-          <Link
-            href="/join"
-            className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold hover:bg-amber-600"
-          >
-            Sign Up to Play
-          </Link>
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              href="/join"
+              className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold hover:bg-amber-600"
+            >
+              Sign Up to Play
+            </Link>
+            <Link href="/login" className="text-sm text-neutral-500 hover:underline">
+              Already a member? Log in
+            </Link>
+          </div>
         )}
 
         {user && (

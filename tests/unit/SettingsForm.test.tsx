@@ -104,4 +104,44 @@ describe("SettingsForm", () => {
       await screen.findByText(/check your inbox at fresh@example.com/i)
     ).toBeInTheDocument();
   });
+
+  it("trims whitespace from the name before submitting", async () => {
+    const user = userEvent.setup();
+    render(<SettingsForm {...BASE} />);
+    const input = screen.getByLabelText(/display name/i);
+    await user.clear(input);
+    await user.type(input, "  Jordan  ");
+    await user.click(screen.getByRole("button", { name: /save name/i }));
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/profile",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "Jordan" }),
+      })
+    );
+    expect(input).toHaveValue("Jordan");
+  });
+
+  it("disables Send confirmation button when the email matches pendingEmail", async () => {
+    render(<SettingsForm {...BASE} pendingEmail="pending@example.com" />);
+    const input = screen.getByLabelText("Email");
+    await userEvent.setup().clear(input);
+    await userEvent.setup().type(input, "pending@example.com");
+    expect(screen.getByRole("button", { name: /send confirmation/i })).toBeDisabled();
+  });
+
+  it("reverts the toggle when the server rejects the update", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "nope" }),
+    });
+    const user = userEvent.setup();
+    render(<SettingsForm {...BASE} />);
+    const cb = screen.getByLabelText(/email reminders/i);
+    expect(cb).toBeChecked();
+    await user.click(cb);
+    // After the failed POST resolves, the checkbox should be back to checked
+    await screen.findByRole("alert");
+    expect(cb).toBeChecked();
+  });
 });

@@ -45,9 +45,11 @@ export function SettingsForm({
   const [nameError, setNameError] = useState<string | null>(null);
 
   async function saveName() {
+    const trimmed = name.trim();
+    setName(trimmed);
     setNameSaving(true);
     setNameError(null);
-    const r = await postJson("/api/profile", { name });
+    const r = await postJson("/api/profile", { name: trimmed });
     setNameSaving(false);
     if (r.ok) {
       setNameSaved(true);
@@ -78,6 +80,7 @@ export function SettingsForm({
   // Toggles
   const [reminder, setReminder] = useState(initialReminderEmail);
   const [active, setActive] = useState(initialActive);
+  const [toggleSaving, setToggleSaving] = useState<"reminder" | "active" | null>(null);
   const [toggleSaved, setToggleSaved] = useState<"reminder" | "active" | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
 
@@ -85,12 +88,16 @@ export function SettingsForm({
     field: "reminder_email" | "active",
     next: boolean
   ) {
+    const key = field === "reminder_email" ? "reminder" : "active";
+    if (toggleSaving) return; // drop rapid-fire clicks during an in-flight request
+    setToggleSaving(key);
     if (field === "reminder_email") setReminder(next);
     else setActive(next);
     setToggleError(null);
     const r = await postJson("/api/profile", { [field]: next });
+    setToggleSaving(null);
     if (r.ok) {
-      setToggleSaved(field === "reminder_email" ? "reminder" : "active");
+      setToggleSaved(key);
       setTimeout(() => setToggleSaved(null), 2000);
     } else {
       // Revert optimistic state on failure
@@ -158,7 +165,12 @@ export function SettingsForm({
         />
         <button
           type="submit"
-          disabled={emailSubmitting || !email || email === initialEmail}
+          disabled={
+            emailSubmitting ||
+            !email.trim() ||
+            email.trim() === initialEmail ||
+            email.trim() === pendingTarget
+          }
           className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-amber-600"
         >
           {emailSubmitting ? "Sending…" : "Send confirmation email"}
@@ -181,6 +193,7 @@ export function SettingsForm({
           <input
             type="checkbox"
             checked={reminder}
+            disabled={toggleSaving !== null}
             onChange={(e) => toggleField("reminder_email", e.target.checked)}
           />
           Email reminders
@@ -192,6 +205,7 @@ export function SettingsForm({
           <input
             type="checkbox"
             checked={active}
+            disabled={toggleSaving !== null}
             onChange={(e) => toggleField("active", e.target.checked)}
           />
           Active (uncheck to leave the group)

@@ -102,7 +102,12 @@ export function RsvpControls({
           >
             −
           </button>
-          <span aria-label="guests" className="min-w-[1.5rem] text-center font-semibold text-neutral-900">
+          <span
+            aria-live="polite"
+            aria-atomic="true"
+            aria-label={`${guests} guests`}
+            className="min-w-[1.5rem] text-center font-semibold text-neutral-900"
+          >
             {guests}
           </span>
           <button

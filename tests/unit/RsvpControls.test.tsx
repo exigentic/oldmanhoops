@@ -30,7 +30,7 @@ describe("RsvpControls", () => {
 
   it("shows the current guest count and note", () => {
     render(<RsvpControls counts={ZERO_COUNTS} current={{ status: "in", guests: 2, note: "hello" }} />);
-    expect(screen.getByLabelText(/^guests$/i)).toHaveTextContent("2");
+    expect(screen.getByLabelText(/2 guests/i)).toHaveTextContent("2");
     expect(screen.getByLabelText(/^note$/i)).toHaveValue("hello");
   });
 

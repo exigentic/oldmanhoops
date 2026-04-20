@@ -27,4 +27,5 @@ export const env = {
   APP_TIMEZONE: require_("APP_TIMEZONE", process.env.APP_TIMEZONE),
   ADMIN_EMAIL: require_("ADMIN_EMAIL", process.env.ADMIN_EMAIL),
   RESEND_API_KEY: require_("RESEND_API_KEY", process.env.RESEND_API_KEY),
+  EMAIL_FROM: require_("EMAIL_FROM", process.env.EMAIL_FROM),
 } as const;

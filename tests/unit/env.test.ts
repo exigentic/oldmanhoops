@@ -20,9 +20,11 @@ describe("env", () => {
     process.env.APP_TIMEZONE = "America/New_York";
     process.env.ADMIN_EMAIL = "admin@example.com";
     process.env.RESEND_API_KEY = "re_xxx";
+    process.env.EMAIL_FROM = "OldManHoops <onboarding@resend.dev>";
     const { env } = require("@/lib/env");
     expect(env.NEXT_PUBLIC_SUPABASE_URL).toBe("http://127.0.0.1:55321");
     expect(env.SIGNUP_CODE).toBe("test-code-123");
+    expect(env.EMAIL_FROM).toBe("OldManHoops <onboarding@resend.dev>");
   });
 
   it("throws when a required env var is missing", () => {

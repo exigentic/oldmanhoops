@@ -24,7 +24,7 @@ describe("POST /api/profile", () => {
     expect(body.error).toMatch(/auth/i);
   });
 
-  it("returns 400 on invalid JSON body", async () => {
+  it("returns 401 on invalid JSON body (auth checked first)", async () => {
     const res = await POST(
       new Request("http://localhost/api/profile", {
         method: "POST",
@@ -32,9 +32,18 @@ describe("POST /api/profile", () => {
         body: "not json",
       })
     );
-    // Could be 400 (bad JSON) or 401 (no session checked first) — document which.
-    // Our implementation checks session first, so expect 401 here.
-    expect([400, 401]).toContain(res.status);
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 401 on null JSON body (no crash from null guard)", async () => {
+    const res = await POST(
+      new Request("http://localhost/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "null",
+      })
+    );
+    expect(res.status).toBe(401);
   });
 
   it("returns 401 before validating fields (no session)", async () => {

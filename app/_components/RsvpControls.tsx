@@ -104,7 +104,7 @@ export function RsvpControls({
         })}
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-sm text-neutral-400">Bringing guests</span>
+        <span className="text-sm text-neutral-400">Guests?</span>
         <div className="flex items-center gap-2">
           <button
             type="button"

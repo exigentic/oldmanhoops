@@ -12,6 +12,7 @@ export async function GET(): Promise<Response> {
   const data = await getTodayScoreboard(supabase, {
     today: getToday(),
     includeRoster: !!user,
+    userId: user?.id,
   });
 
   return NextResponse.json(data);

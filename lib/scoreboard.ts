@@ -23,6 +23,12 @@ export interface RosterEntry {
   note: string | null;
 }
 
+export interface CurrentRsvp {
+  status: RsvpStatus;
+  guests: number;
+  note: string | null;
+}
+
 export type ScoreboardData =
   | { state: "no-game" }
   | { state: "cancelled"; reason: string | null }
@@ -30,11 +36,12 @@ export type ScoreboardData =
       state: "scheduled";
       counts: { in: number; out: number; maybe: number };
       roster: RosterEntry[] | null;
+      currentUserRsvp: CurrentRsvp | null;
     };
 
 export async function getTodayScoreboard(
   supabase: SupabaseClient,
-  opts: { today: string; includeRoster: boolean }
+  opts: { today: string; includeRoster: boolean; userId?: string }
 ): Promise<ScoreboardData> {
   const { data: game, error: gameErr } = await supabase
     .from("games")
@@ -50,7 +57,7 @@ export async function getTodayScoreboard(
 
   const { data: rsvps, error: rsvpErr } = await supabase
     .from("rsvps")
-    .select("status, guests, note, players!inner(name)")
+    .select("player_id, status, guests, note, players!inner(name)")
     .eq("game_id", game.id);
 
   if (rsvpErr) throw rsvpErr;
@@ -59,6 +66,7 @@ export async function getTodayScoreboard(
   let outCount = 0;
   let maybeCount = 0;
   const roster: RosterEntry[] = [];
+  let currentUserRsvp: CurrentRsvp | null = null;
 
   for (const r of rsvps ?? []) {
     const guests = r.guests ?? 0;
@@ -74,11 +82,20 @@ export async function getTodayScoreboard(
         note: r.note ?? null,
       });
     }
+
+    if (opts.userId && r.player_id === opts.userId) {
+      currentUserRsvp = {
+        status: r.status as RsvpStatus,
+        guests,
+        note: r.note ?? null,
+      };
+    }
   }
 
   return {
     state: "scheduled",
     counts: { in: inCount, out: outCount, maybe: maybeCount },
     roster: opts.includeRoster ? roster : null,
+    currentUserRsvp,
   };
 }

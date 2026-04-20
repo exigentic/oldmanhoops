@@ -84,6 +84,7 @@ describe("getTodayScoreboard", () => {
       if (result.state === "scheduled") {
         expect(result.counts).toEqual({ in: 3, out: 1, maybe: 2 });
         expect(result.roster).toBeNull();
+        expect(result.currentUserRsvp).toBeNull();
       }
     } finally {
       await cleanup(date);
@@ -109,10 +110,67 @@ describe("getTodayScoreboard", () => {
             expect.objectContaining({ name: "Bob", status: "out", guests: 0, note: null }),
           ])
         );
+        expect(result.currentUserRsvp).toBeNull();
       }
     } finally {
       await cleanup(date);
       for (const id of [p1, p2]) await admin.auth.admin.deleteUser(id);
+    }
+  });
+
+  it("populates currentUserRsvp when userId is provided and they have an RSVP", async () => {
+    const date = "2099-04-05";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-cur1@example.com", "Alice");
+    try {
+      await seedRsvp(gameId, p1, "in", 1, "running late");
+      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true, userId: p1 });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled") {
+        expect(result.currentUserRsvp).toEqual({ status: "in", guests: 1, note: "running late" });
+      }
+    } finally {
+      await cleanup(date);
+      await admin.auth.admin.deleteUser(p1);
+    }
+  });
+
+  it("returns currentUserRsvp null when user has not RSVP'd yet", async () => {
+    const date = "2099-04-06";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-cur2@example.com", "Bob");
+    try {
+      await seedRsvp(gameId, p1, "in"); // seed one so rsvps query returns rows (but not for our user)
+      const p2 = await seedPlayer("sb-test-cur3@example.com", "Cat");
+      try {
+        const result = await getTodayScoreboard(admin, { today: date, includeRoster: true, userId: p2 });
+        expect(result.state).toBe("scheduled");
+        if (result.state === "scheduled") {
+          expect(result.currentUserRsvp).toBeNull();
+        }
+      } finally {
+        await admin.auth.admin.deleteUser(p2);
+      }
+    } finally {
+      await cleanup(date);
+      await admin.auth.admin.deleteUser(p1);
+    }
+  });
+
+  it("returns currentUserRsvp null when userId is not provided", async () => {
+    const date = "2099-04-07";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-cur4@example.com", "Dave");
+    try {
+      await seedRsvp(gameId, p1, "maybe");
+      const result = await getTodayScoreboard(admin, { today: date, includeRoster: false });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled") {
+        expect(result.currentUserRsvp).toBeNull();
+      }
+    } finally {
+      await cleanup(date);
+      await admin.auth.admin.deleteUser(p1);
     }
   });
 });

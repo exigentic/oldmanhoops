@@ -1,15 +1,25 @@
 import { config as loadEnv } from "dotenv";
 import { resolve } from "node:path";
 import { test as base, expect } from "@playwright/test";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { DateTime } from "luxon";
 
-// Load .env.local so dynamic imports of lib/env resolve at fixture init.
+// Load .env.local so env vars are populated before the admin client is built.
 loadEnv({ path: resolve(process.cwd(), ".env.local") });
 
-// Import lazily so env vars are populated before lib/env evaluates.
-async function adminClient() {
-  const mod = await import("../../lib/supabase/admin");
-  return mod.createAdminClient();
+// Build a Supabase admin client directly from process.env. We avoid
+// importing lib/supabase/admin (which reads lib/env at module-init time)
+// because Playwright's dynamic-import loader cannot evaluate that TS file
+// from inside a fixture — it lands in a CJS context and the ESM `import`
+// statements blow up at parse time.
+function adminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
+  if (!key) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY");
+  return createSupabaseClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 function uniqueEmail(): string {
@@ -33,7 +43,7 @@ export const test = base.extend<Fixtures>({
   // Auto-applied: ensures today's game row exists and is scheduled.
   cleanToday: [
     async ({}, use) => {
-      const admin = await adminClient();
+      const admin = adminClient();
       const today = todayInAppTz();
       await admin
         .from("games")
@@ -47,7 +57,7 @@ export const test = base.extend<Fixtures>({
   ],
 
   authedUser: async ({ page }, use) => {
-    const admin = await adminClient();
+    const admin = adminClient();
     const email = uniqueEmail();
 
     // Create user (handle_new_user trigger inserts the players row).

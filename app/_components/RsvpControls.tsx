@@ -21,7 +21,9 @@ export function RsvpControls({
   const [status, setStatus] = useState<RsvpStatus | null>(current?.status ?? null);
   const [guests, setGuests] = useState<number>(current?.guests ?? 0);
   const [note, setNote] = useState<string>(current?.note ?? "");
+  const initialNoteRef = useRef<string>(current?.note ?? "");
   const [submitting, setSubmitting] = useState(false);
+  const [noteState, setNoteState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
   const noteRef = useRef<HTMLInputElement | null>(null);
 
@@ -33,13 +35,13 @@ export function RsvpControls({
     status?: RsvpStatus | null;
     guests?: number;
     note?: string;
-  }) {
+  }): Promise<boolean> {
     const body = {
       status: next.status ?? status,
       guests: next.guests ?? guests,
       note: (next.note ?? note) || null,
     };
-    if (!body.status) return;
+    if (!body.status) return false;
 
     setSubmitting(true);
     setError(null);
@@ -52,11 +54,25 @@ export function RsvpControls({
       const data = await res.json();
       if (!res.ok) {
         setError(data.error ?? "Update failed");
-        return;
+        return false;
       }
       onUpdated?.();
+      return true;
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function saveNote() {
+    if (note === initialNoteRef.current) return;
+    setNoteState("saving");
+    const ok = await submit({ note });
+    if (ok) {
+      initialNoteRef.current = note;
+      setNoteState("saved");
+      setTimeout(() => setNoteState("idle"), 2000);
+    } else {
+      setNoteState("idle");
     }
   }
 
@@ -122,15 +138,34 @@ export function RsvpControls({
         </div>
       </div>
       <label className="flex flex-col gap-1 text-sm text-neutral-300">
-        Note
+        <span className="flex items-center justify-between">
+          <span>Note</span>
+          <span aria-live="polite" className="text-xs">
+            {noteState === "saving" && (
+              <span className="text-neutral-400">Saving…</span>
+            )}
+            {noteState === "saved" && (
+              <span className="text-emerald-400">Saved ✓</span>
+            )}
+          </span>
+        </span>
         <input
           ref={noteRef}
           type="text"
           maxLength={100}
           value={note}
           aria-label="note"
-          onChange={(e) => setNote(e.target.value)}
-          onBlur={() => submit({ note })}
+          onChange={(e) => {
+            setNote(e.target.value);
+            if (noteState === "saved") setNoteState("idle");
+          }}
+          onBlur={saveNote}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
           placeholder="e.g., running 15 min late"
           className="rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-neutral-100"
         />

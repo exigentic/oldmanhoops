@@ -56,4 +56,28 @@ describe("RsvpControls", () => {
     await user.click(screen.getByRole("button", { name: /^in$/i }));
     expect(onUpdated).toHaveBeenCalled();
   });
+
+  it("shows 'Saved ✓' after the note is saved on blur", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls current={{ status: "in", guests: 0, note: "" }} />);
+    const note = screen.getByLabelText(/^note$/i);
+    await user.click(note);
+    await user.keyboard("hello");
+    await user.tab();
+    expect(await screen.findByText(/saved ✓/i)).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/rsvp",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("does not save the note when it hasn't changed", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls current={{ status: "in", guests: 0, note: "original" }} />);
+    const note = screen.getByLabelText(/^note$/i);
+    await user.click(note);
+    await user.tab();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.queryByText(/saved ✓/i)).not.toBeInTheDocument();
+  });
 });

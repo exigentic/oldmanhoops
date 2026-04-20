@@ -15,7 +15,7 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
   for (const e of entries) grouped[e.status].push(e);
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-md">
+    <div className="flex flex-col gap-4 w-full">
       {ORDER.map((status) =>
         grouped[status].length === 0 ? null : (
           <section key={status}>
@@ -29,7 +29,9 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
                     {e.name}
                     {e.guests > 0 && <span className="text-neutral-400"> +{e.guests}</span>}
                   </span>
-                  {e.note && <span className="text-xs text-neutral-400">{e.note}</span>}
+                  {e.note && (
+                    <span className="text-xs text-neutral-400 break-words">{e.note}</span>
+                  )}
                 </li>
               ))}
             </ul>

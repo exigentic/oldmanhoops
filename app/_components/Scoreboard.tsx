@@ -63,7 +63,7 @@ export function Scoreboard({
   const isMember = data.roster !== null;
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col w-full gap-6">
       {isMember && (
         <ConfirmationBanner
           urlStatus={urlStatus}
@@ -71,14 +71,22 @@ export function Scoreboard({
         />
       )}
       <CountCards counts={data.counts} />
-      {isMember && (
-        <RsvpControls
-          current={data.currentUserRsvp}
-          focusNoteOnMount={focusNoteOnMount}
-          onUpdated={refresh}
-        />
-      )}
-      {data.roster && <Roster entries={data.roster} />}
+      <div className="flex flex-col md:flex-row gap-6 md:items-start">
+        {isMember && (
+          <div className="md:w-1/2">
+            <RsvpControls
+              current={data.currentUserRsvp}
+              focusNoteOnMount={focusNoteOnMount}
+              onUpdated={refresh}
+            />
+          </div>
+        )}
+        {data.roster && data.roster.length > 0 && (
+          <div className={isMember ? "md:w-1/2" : "w-full"}>
+            <Roster entries={data.roster} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

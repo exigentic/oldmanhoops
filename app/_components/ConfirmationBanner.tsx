@@ -16,7 +16,7 @@ export function ConfirmationBanner({
   if (!urlStatus || !actualStatus || urlStatus !== actualStatus) return null;
   const msg = MESSAGES[actualStatus];
   return (
-    <div className={`w-full max-w-md rounded-lg border px-4 py-3 text-center font-semibold ${msg.color}`}>
+    <div className={`w-full rounded-lg border px-4 py-3 text-center font-semibold ${msg.color}`}>
       {msg.text}
     </div>
   );

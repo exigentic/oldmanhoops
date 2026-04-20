@@ -77,7 +77,7 @@ export function RsvpControls({
   }
 
   return (
-    <section className="flex flex-col gap-3 w-full max-w-md">
+    <section className="flex flex-col gap-3 w-full">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
         Your RSVP
       </h2>

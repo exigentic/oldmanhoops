@@ -1,13 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ScoreboardData } from "@/lib/scoreboard";
+import type { ScoreboardData, RsvpStatus } from "@/lib/scoreboard";
 import { CountCards } from "./CountCards";
 import { Roster } from "./Roster";
+import { RsvpControls } from "./RsvpControls";
+import { ConfirmationBanner } from "./ConfirmationBanner";
 
 const POLL_MS = 30_000;
 
-export function Scoreboard({ initial }: { initial: ScoreboardData }) {
+export function Scoreboard({
+  initial,
+  urlStatus = null,
+  focusNoteOnMount = false,
+}: {
+  initial: ScoreboardData;
+  urlStatus?: string | null;
+  focusNoteOnMount?: boolean;
+}) {
   const [data, setData] = useState<ScoreboardData>(initial);
 
   useEffect(() => {
@@ -49,9 +59,20 @@ export function Scoreboard({ initial }: { initial: ScoreboardData }) {
     );
   }
 
+  const isMember = data.roster !== null;
+
   return (
     <div className="flex flex-col items-center gap-6">
+      {isMember && (
+        <ConfirmationBanner
+          urlStatus={urlStatus}
+          actualStatus={(data.currentUserRsvp?.status as RsvpStatus) ?? null}
+        />
+      )}
       <CountCards counts={data.counts} />
+      {isMember && (
+        <RsvpControls current={data.currentUserRsvp} focusNoteOnMount={focusNoteOnMount} />
+      )}
       {data.roster && <Roster entries={data.roster} />}
     </div>
   );

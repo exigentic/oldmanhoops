@@ -7,7 +7,12 @@ import { Scoreboard } from "@/app/_components/Scoreboard";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status: urlStatus } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -16,6 +21,7 @@ export default async function Home() {
   const initial = await getTodayScoreboard(supabase, {
     today: getToday(),
     includeRoster: !!user,
+    userId: user?.id,
   });
 
   return (
@@ -25,7 +31,11 @@ export default async function Home() {
         <h1 className="text-2xl font-bold text-amber-400">OldManHoops</h1>
       </header>
 
-      <Scoreboard initial={initial} />
+      <Scoreboard
+        initial={initial}
+        urlStatus={urlStatus ?? null}
+        focusNoteOnMount={!!urlStatus}
+      />
 
       {!user && (
         <Link

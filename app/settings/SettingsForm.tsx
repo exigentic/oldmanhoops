@@ -153,7 +153,7 @@ export function SettingsForm({
           <button
             type="submit"
             disabled={nameSaving || name.trim().length === 0}
-            className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-amber-600"
+            className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-indigo-700"
           >
             {nameSaving ? "Saving…" : "Save name"}
           </button>
@@ -195,7 +195,7 @@ export function SettingsForm({
             email.trim() === initialEmail ||
             email.trim() === pendingTarget
           }
-          className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-amber-600"
+          className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-indigo-700"
         >
           {emailSubmitting ? "Sending…" : "Send confirmation email"}
         </button>

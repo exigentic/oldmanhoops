@@ -77,7 +77,7 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
       <button
         type="submit"
         disabled={submitting}
-        className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-amber-600"
+        className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-indigo-700"
       >
         {submitting ? "Signing up..." : "Sign up"}
       </button>

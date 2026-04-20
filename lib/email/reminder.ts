@@ -83,7 +83,7 @@ export function buildReminderEmail(input: ReminderInput): Email {
 <html>
   <body style="margin:0;padding:24px;background:#f5f5f5;font-family:system-ui,sans-serif;color:#111;">
     <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;padding:24px;">
-      <h1 style="margin:0 0 8px;font-size:20px;color:#d97706;">Old Man Hoops</h1>
+      <h1 style="margin:0 0 8px;font-size:20px;color:#4338ca;">Old Man Hoops</h1>
       <p style="margin:0 0 16px;color:#555;">${safeDate} — noon at One Athletics.</p>
       <p style="margin:0 0 16px;">${greeting}</p>
       <p style="margin:0 0 20px;">Are you playing today?</p>

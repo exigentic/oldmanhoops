@@ -30,7 +30,7 @@ export default async function Home({
       <header className="flex items-center gap-4">
         <Image src="/omh.svg" alt="Old Man Hoops" width={56} height={56} />
         <div className="flex flex-col leading-tight">
-          <h1 className="text-2xl font-bold text-amber-600">Old Man Hoops</h1>
+          <h1 className="text-2xl font-bold text-indigo-700">Old Man Hoops</h1>
           <p className="text-sm text-neutral-600">M-F, Noon @ One Athletics</p>
           <p className="text-sm text-neutral-500 mt-0.5">{formatGameDate(today)}</p>
         </div>
@@ -47,7 +47,7 @@ export default async function Home({
           <div className="flex flex-col items-center gap-2">
             <Link
               href="/join"
-              className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold hover:bg-amber-600"
+              className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold hover:bg-indigo-700"
             >
               Sign Up to Play
             </Link>

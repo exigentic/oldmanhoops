@@ -63,7 +63,7 @@ export function Scoreboard({
   const isMember = data.roster !== null;
 
   return (
-    <div className="flex flex-col w-full gap-6">
+    <div className="flex flex-col w-full gap-6" aria-live="polite" aria-atomic="false">
       {isMember && (
         <ConfirmationBanner
           urlStatus={urlStatus}

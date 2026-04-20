@@ -51,6 +51,15 @@ export default async function Home({
             Sign Up to Play
           </Link>
         )}
+
+        {user && (
+          <Link
+            href="/settings"
+            className="text-sm text-neutral-500 hover:underline"
+          >
+            Manage Settings
+          </Link>
+        )}
       </div>
     </main>
   );

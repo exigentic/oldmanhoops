@@ -23,7 +23,7 @@ const CARDS: CardConfig[] = [
     title: "Maybe",
     valueClass: "text-yellow-700",
     titleClass: "text-yellow-700",
-    baseClass: "bg-yellow-50 border-yellow-200",
+    baseClass: "bg-yellow-50 border-yellow-400",
     selectedClass: "bg-yellow-100 border-yellow-500 ring-2 ring-yellow-500",
   },
   {

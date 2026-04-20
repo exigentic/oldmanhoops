@@ -67,6 +67,7 @@ export async function GET(request: Request): Promise<Response> {
 
     const baseUrl = new URL(request.url).origin;
     const gameDateText = formatGameDate(today);
+    const gameId = game.id;
     const CONCURRENCY = 2;
 
     async function sendOne(p: PlayerRow): Promise<"sent" | "failed"> {
@@ -78,7 +79,7 @@ export async function GET(request: Request): Promise<Response> {
       const { subject, html } = buildReminderEmail({
         playerName: p.name,
         playerId: p.id,
-        gameId: game.id,
+        gameId,
         gameDateText,
         baseUrl,
         hmacSecret: env.HMAC_SECRET,

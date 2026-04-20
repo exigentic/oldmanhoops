@@ -45,30 +45,35 @@ export async function GET(request: Request): Promise<Response> {
       return NextResponse.json({ ok: true, sent: 0, failed: 0, total: 0 });
     }
 
-    // Fetch emails from auth.users (paginated in case of large user sets)
+    // Fetch emails from auth.users (paginated; cap guards against runaway loops)
     const byId = new Map<string, string>();
+    const MAX_PAGES = 10;
+    const PER_PAGE = 200;
     let page = 1;
-    for (let i = 0; i < 10; i++) {
-      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    let lastPageSize = PER_PAGE;
+    for (; page <= MAX_PAGES && lastPageSize === PER_PAGE; page++) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: PER_PAGE });
       if (error) throw new Error(`listUsersErr: ${error.message}`);
       for (const u of data.users) {
         if (u.email) byId.set(u.id, u.email);
       }
-      if (data.users.length < 200) break;
-      page += 1;
+      lastPageSize = data.users.length;
+    }
+    if (lastPageSize === PER_PAGE) {
+      throw new Error(
+        `listUsersErr: pagination cap hit (>${MAX_PAGES * PER_PAGE} users); bump MAX_PAGES`
+      );
     }
 
     const baseUrl = new URL(request.url).origin;
     const gameDateText = formatGameDate(today);
+    const CONCURRENCY = 2;
 
-    let sent = 0;
-    let failed = 0;
-    for (const p of rows) {
+    async function sendOne(p: PlayerRow): Promise<"sent" | "failed"> {
       const email = byId.get(p.id);
       if (!email) {
         console.error(`remind: no auth.users email for player ${p.id}`);
-        failed += 1;
-        continue;
+        return "failed";
       }
       const { subject, html } = buildReminderEmail({
         playerName: p.name,
@@ -81,9 +86,19 @@ export async function GET(request: Request): Promise<Response> {
       const result = await sendEmail(email, subject, html);
       if (result.error) {
         console.error(`remind: send failed for ${email}: ${result.error}`);
-        failed += 1;
-      } else {
-        sent += 1;
+        return "failed";
+      }
+      return "sent";
+    }
+
+    let sent = 0;
+    let failed = 0;
+    for (let i = 0; i < rows.length; i += CONCURRENCY) {
+      const chunk = rows.slice(i, i + CONCURRENCY);
+      const outcomes = await Promise.all(chunk.map(sendOne));
+      for (const o of outcomes) {
+        if (o === "sent") sent += 1;
+        else failed += 1;
       }
     }
 

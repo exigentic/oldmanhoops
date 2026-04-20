@@ -127,9 +127,9 @@ export function RsvpControls({
           </button>
         </div>
       </div>
-      <label className="flex flex-col gap-1 text-sm text-neutral-700">
-        <span className="flex items-center justify-between">
-          <span>Note</span>
+      <div className="flex flex-col gap-1 text-sm text-neutral-700">
+        <div className="flex items-center justify-between">
+          <label htmlFor="rsvp-note">Note</label>
           <span aria-live="polite" className="text-xs">
             {noteState === "saving" && (
               <span className="text-neutral-500">Saving…</span>
@@ -138,13 +138,13 @@ export function RsvpControls({
               <span className="text-emerald-600">Saved ✓</span>
             )}
           </span>
-        </span>
+        </div>
         <input
+          id="rsvp-note"
           ref={noteRef}
           type="text"
           maxLength={100}
           value={note}
-          aria-label="note"
           onChange={(e) => {
             setNote(e.target.value);
             if (noteState === "saved") setNoteState("idle");
@@ -159,7 +159,7 @@ export function RsvpControls({
           placeholder="e.g., running 15 min late"
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
-      </label>
+      </div>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </section>
   );

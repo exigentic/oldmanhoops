@@ -15,16 +15,16 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
-  const { data: player } = await supabase
+  const { data: player, error: playerErr } = await supabase
     .from("players")
     .select("name, reminder_email, active")
     .eq("id", user.id)
     .single();
+  if (playerErr) {
+    console.error(`settings: player fetch failed for ${user.id}: ${playerErr.message}`);
+  }
 
-  // Supabase exposes a pending new email on `user.new_email` while a Secure
-  // Email Change is awaiting confirmation.
-  const userWithPending = user as typeof user & { new_email?: string | null };
-  const pendingEmail = userWithPending.new_email ?? null;
+  const pendingEmail = user.new_email ?? null;
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-neutral-50 text-neutral-900 p-6 pt-8 gap-6">

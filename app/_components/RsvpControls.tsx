@@ -80,12 +80,14 @@ export function RsvpControls({
 
   return (
     <section className="flex flex-col gap-4 w-full">
-      <CountCards
-        counts={counts}
-        selected={status}
-        onSelect={selectStatus}
-        disabled={submitting}
-      />
+      <div role="group" aria-label="Your RSVP status">
+        <CountCards
+          counts={counts}
+          selected={status}
+          onSelect={selectStatus}
+          disabled={submitting}
+        />
+      </div>
       <div className="flex items-center justify-between">
         <span className="text-sm text-neutral-600">Guests?</span>
         <div className="flex items-center gap-2">

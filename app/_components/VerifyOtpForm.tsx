@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type VerifyType = "invite" | "email";
 
@@ -14,6 +14,11 @@ export function VerifyOtpForm({
   const [token, setToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,13 +43,14 @@ export function VerifyOtpForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full max-w-sm">
-      <p className="text-neutral-700 text-sm">
+      <p role="status" className="text-neutral-700 text-sm">
         Check your email for a link or 6-digit code. Paste the code here to
         finish signing in.
       </p>
       <label className="flex flex-col gap-1 text-sm text-neutral-700">
         Code
         <input
+          ref={inputRef}
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"

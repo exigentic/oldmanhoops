@@ -100,7 +100,7 @@ export function RsvpControls({
               setGuests(next);
               submit({ guests: next });
             }}
-            className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
+            className="w-11 h-11 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
           >
             −
           </button>
@@ -121,7 +121,7 @@ export function RsvpControls({
               setGuests(next);
               submit({ guests: next });
             }}
-            className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
+            className="w-11 h-11 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
           >
             +
           </button>

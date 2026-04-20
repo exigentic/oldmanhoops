@@ -39,7 +39,12 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full max-w-sm">
       <label className="flex flex-col gap-1 text-sm text-neutral-700">
-        Name
+        <span className="flex items-baseline gap-2">
+          Name
+          <span className="text-xs text-neutral-500 font-normal">
+            won&apos;t be shown to non-members
+          </span>
+        </span>
         <input
           type="text"
           value={name}

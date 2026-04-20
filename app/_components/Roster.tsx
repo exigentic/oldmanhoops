@@ -22,14 +22,14 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
             <h2 className={`text-sm font-semibold uppercase tracking-wide mb-2 ${HEADING_CLASS[status]}`}>
               {LABEL[status]}
             </h2>
-            <ul className="flex flex-col gap-1 text-neutral-200">
+            <ul className="flex flex-col gap-2 text-neutral-200">
               {grouped[status].map((e, i) => (
-                <li key={`${e.name}-${i}`} className="flex items-baseline gap-2">
+                <li key={`${e.name}-${i}`} className="flex flex-col">
                   <span className="font-medium">
                     {e.name}
                     {e.guests > 0 && <span className="text-neutral-400"> +{e.guests}</span>}
                   </span>
-                  {e.note && <span className="text-xs text-neutral-400">— {e.note}</span>}
+                  {e.note && <span className="text-xs text-neutral-400">{e.note}</span>}
                 </li>
               ))}
             </ul>

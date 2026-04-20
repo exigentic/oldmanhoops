@@ -2,18 +2,15 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { CurrentRsvp, RsvpStatus } from "@/lib/scoreboard";
-
-const STATUSES: { key: RsvpStatus; label: string; activeClass: string }[] = [
-  { key: "in", label: "In", activeClass: "bg-emerald-600 text-white border-emerald-600" },
-  { key: "out", label: "Out", activeClass: "bg-red-600 text-white border-red-600" },
-  { key: "maybe", label: "Maybe", activeClass: "bg-sky-600 text-white border-sky-600" },
-];
+import { CountCards } from "./CountCards";
 
 export function RsvpControls({
+  counts,
   current,
   focusNoteOnMount = false,
   onUpdated,
 }: {
+  counts: { in: number; out: number; maybe: number };
   current: CurrentRsvp | null;
   focusNoteOnMount?: boolean;
   onUpdated?: () => void;
@@ -63,6 +60,11 @@ export function RsvpControls({
     }
   }
 
+  function selectStatus(next: RsvpStatus) {
+    setStatus(next);
+    submit({ status: next });
+  }
+
   async function saveNote() {
     if (note === initialNoteRef.current) return;
     setNoteState("saving");
@@ -77,32 +79,13 @@ export function RsvpControls({
   }
 
   return (
-    <section className="flex flex-col gap-3 w-full">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
-        Your RSVP
-      </h2>
-      <div className="flex gap-2">
-        {STATUSES.map((s) => {
-          const pressed = status === s.key;
-          return (
-            <button
-              key={s.key}
-              type="button"
-              aria-pressed={pressed}
-              onClick={() => {
-                setStatus(s.key);
-                submit({ status: s.key });
-              }}
-              disabled={submitting}
-              className={`flex-1 rounded-md border px-3 py-2 font-semibold disabled:opacity-50 ${
-                pressed ? s.activeClass : "bg-white text-neutral-700 border-neutral-300"
-              }`}
-            >
-              {s.label}
-            </button>
-          );
-        })}
-      </div>
+    <section className="flex flex-col gap-4 w-full">
+      <CountCards
+        counts={counts}
+        selected={status}
+        onSelect={selectStatus}
+        disabled={submitting}
+      />
       <div className="flex items-center justify-between">
         <span className="text-sm text-neutral-600">Guests?</span>
         <div className="flex items-center gap-2">

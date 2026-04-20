@@ -1,61 +1,110 @@
+import type { RsvpStatus } from "@/lib/scoreboard";
+
+type CardConfig = {
+  key: RsvpStatus;
+  title: string;
+  valueClass: string;
+  titleClass: string;
+  baseClass: string;
+  selectedClass: string;
+};
+
+const CARDS: CardConfig[] = [
+  {
+    key: "in",
+    title: "In",
+    valueClass: "text-emerald-700",
+    titleClass: "text-emerald-700",
+    baseClass: "bg-emerald-50 border-emerald-200",
+    selectedClass: "bg-emerald-100 border-emerald-500 ring-2 ring-emerald-500",
+  },
+  {
+    key: "out",
+    title: "Out",
+    valueClass: "text-red-700",
+    titleClass: "text-red-700",
+    baseClass: "bg-red-50 border-red-200",
+    selectedClass: "bg-red-100 border-red-500 ring-2 ring-red-500",
+  },
+  {
+    key: "maybe",
+    title: "Maybe",
+    valueClass: "text-sky-700",
+    titleClass: "text-sky-700",
+    baseClass: "bg-sky-50 border-sky-200",
+    selectedClass: "bg-sky-100 border-sky-500 ring-2 ring-sky-500",
+  },
+];
+
 export function CountCards({
   counts,
+  selected,
+  onSelect,
+  disabled = false,
 }: {
   counts: { in: number; out: number; maybe: number };
+  selected?: RsvpStatus | null;
+  onSelect?: (status: RsvpStatus) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex gap-3 w-full">
-      <Card
-        label="In count"
-        title="In"
-        value={counts.in}
-        accent="bg-emerald-50 border-emerald-200"
-        valueClass="text-emerald-700"
-        titleClass="text-emerald-700"
-      />
-      <Card
-        label="Out count"
-        title="Out"
-        value={counts.out}
-        accent="bg-red-50 border-red-200"
-        valueClass="text-red-700"
-        titleClass="text-red-700"
-      />
-      <Card
-        label="Maybe count"
-        title="Maybe"
-        value={counts.maybe}
-        accent="bg-sky-50 border-sky-200"
-        valueClass="text-sky-700"
-        titleClass="text-sky-700"
-      />
+      {CARDS.map((c) => (
+        <Card
+          key={c.key}
+          config={c}
+          value={counts[c.key]}
+          selected={selected === c.key}
+          onSelect={onSelect}
+          disabled={disabled}
+        />
+      ))}
     </div>
   );
 }
 
 function Card({
-  label,
-  title,
+  config,
   value,
-  accent,
-  valueClass,
-  titleClass,
+  selected,
+  onSelect,
+  disabled,
 }: {
-  label: string;
-  title: string;
+  config: CardConfig;
   value: number;
-  accent: string;
-  valueClass: string;
-  titleClass: string;
+  selected: boolean;
+  onSelect?: (status: RsvpStatus) => void;
+  disabled: boolean;
 }) {
-  return (
-    <div className={`flex-1 rounded-lg border px-3 py-5 md:py-7 text-center ${accent}`}>
-      <div aria-label={label} className={`text-3xl md:text-5xl font-bold ${valueClass}`}>
+  const interactive = !!onSelect;
+  const classes = `flex-1 rounded-lg border px-3 py-5 md:py-7 text-center ${
+    selected ? config.selectedClass : config.baseClass
+  } ${interactive ? "cursor-pointer transition hover:brightness-95 active:scale-[0.98]" : ""} disabled:opacity-60 disabled:cursor-not-allowed`;
+
+  const inner = (
+    <>
+      <div aria-label={`${config.title} count`} className={`text-3xl md:text-5xl font-bold ${config.valueClass}`}>
         {value}
       </div>
-      <div className={`mt-1 text-xs md:text-sm uppercase tracking-wide font-semibold ${titleClass}`}>
-        {title}
+      <div className={`mt-1 text-xs md:text-sm uppercase tracking-wide font-semibold ${config.titleClass}`}>
+        {config.title}
       </div>
-    </div>
+    </>
   );
+
+  if (interactive) {
+    return (
+      <button
+        type="button"
+        aria-pressed={selected}
+        disabled={disabled}
+        onClick={() => onSelect?.(config.key)}
+        className={classes}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return <div className={classes}>{inner}</div>;
 }

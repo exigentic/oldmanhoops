@@ -70,23 +70,25 @@ export function Scoreboard({
           actualStatus={(data.currentUserRsvp?.status as RsvpStatus) ?? null}
         />
       )}
-      <CountCards counts={data.counts} />
-      <div className="flex flex-col md:flex-row gap-6 md:items-start">
-        {isMember && (
-          <div className="md:w-1/2">
+      {isMember ? (
+        <div className="flex flex-col md:flex-row gap-6 md:items-start">
+          <div className={data.roster && data.roster.length > 0 ? "md:w-1/2" : "w-full"}>
             <RsvpControls
+              counts={data.counts}
               current={data.currentUserRsvp}
               focusNoteOnMount={focusNoteOnMount}
               onUpdated={refresh}
             />
           </div>
-        )}
-        {data.roster && data.roster.length > 0 && (
-          <div className={isMember ? "md:w-1/2" : "w-full"}>
-            <Roster entries={data.roster} />
-          </div>
-        )}
-      </div>
+          {data.roster && data.roster.length > 0 && (
+            <div className="md:w-1/2">
+              <Roster entries={data.roster} />
+            </div>
+          )}
+        </div>
+      ) : (
+        <CountCards counts={data.counts} />
+      )}
     </div>
   );
 }

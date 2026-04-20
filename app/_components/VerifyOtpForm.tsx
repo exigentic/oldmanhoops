@@ -57,11 +57,13 @@ export function VerifyOtpForm({
           value={token}
           onChange={(e) => setToken(e.target.value)}
           required
+          aria-invalid={!!error}
+          aria-describedby={error ? "otp-error" : undefined}
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900 tracking-widest font-mono"
         />
       </label>
       {error && (
-        <p role="alert" className="text-sm text-red-600">
+        <p id="otp-error" role="alert" className="text-sm text-red-600">
           {error}
         </p>
       )}

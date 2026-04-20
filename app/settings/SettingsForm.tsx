@@ -147,6 +147,8 @@ export function SettingsForm({
           onChange={(e) => setName(e.target.value)}
           maxLength={50}
           autoComplete="name"
+          aria-invalid={!!nameError}
+          aria-describedby={nameError ? "name-error" : undefined}
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
         <div className="flex items-center gap-3">
@@ -162,7 +164,7 @@ export function SettingsForm({
           </span>
         </div>
         {nameError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p id="name-error" role="alert" className="text-sm text-red-600">
             {nameError}
           </p>
         )}
@@ -185,6 +187,8 @@ export function SettingsForm({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
+          aria-invalid={!!emailError}
+          aria-describedby={emailError ? "email-error" : undefined}
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
         <button
@@ -205,7 +209,7 @@ export function SettingsForm({
           </p>
         )}
         {emailError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p id="email-error" role="alert" className="text-sm text-red-600">
             {emailError}
           </p>
         )}
@@ -219,6 +223,8 @@ export function SettingsForm({
             checked={reminder}
             disabled={toggleSaving !== null}
             onChange={(e) => toggleField("reminder_email", e.target.checked)}
+            aria-invalid={!!toggleError}
+            aria-describedby={toggleError ? "toggle-error" : undefined}
           />
           Email reminders
           {toggleSaved === "reminder" && (
@@ -231,6 +237,8 @@ export function SettingsForm({
             checked={active}
             disabled={toggleSaving !== null}
             onChange={(e) => toggleField("active", e.target.checked)}
+            aria-invalid={!!toggleError}
+            aria-describedby={toggleError ? "toggle-error" : undefined}
           />
           Active (uncheck to leave the group)
           {toggleSaved === "active" && (
@@ -238,7 +246,7 @@ export function SettingsForm({
           )}
         </label>
         {toggleError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p id="toggle-error" role="alert" className="text-sm text-red-600">
             {toggleError}
           </p>
         )}

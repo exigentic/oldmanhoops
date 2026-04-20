@@ -4,9 +4,9 @@ const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 const STATUSES: RsvpStatus[] = ["in", "out", "maybe"];
 
 const LABELS: Record<RsvpStatus, { label: string; bg: string }> = {
-  in: { label: "I'm In", bg: "#059669" },
-  out: { label: "I'm Out", bg: "#dc2626" },
-  maybe: { label: "Maybe", bg: "#a16207" },
+  in: { label: "I'm In", bg: "#065f46" },
+  out: { label: "I'm Out", bg: "#991b1b" },
+  maybe: { label: "Maybe", bg: "#854d0e" },
 };
 
 interface ReminderInput {

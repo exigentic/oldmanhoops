@@ -3,8 +3,19 @@ import { buildReminderEmail } from "@/lib/email/reminder";
 import { verifyToken } from "@/lib/hmac";
 
 const SECRET = "test-secret-32-bytes-base64-abcdefg";
+const NOW = 1_700_000_000_000;
 
 describe("buildReminderEmail", () => {
+  let nowSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    nowSpy = jest.spyOn(Date, "now").mockReturnValue(NOW);
+  });
+
+  afterEach(() => {
+    nowSpy.mockRestore();
+  });
+
   const baseInput = {
     playerName: "Jordan",
     playerId: "player-123",
@@ -12,6 +23,7 @@ describe("buildReminderEmail", () => {
     gameDateText: "Monday, April 20",
     baseUrl: "https://oldmanhoops.test",
     hmacSecret: SECRET,
+    now: NOW,
   };
 
   it("returns a subject mentioning today's date", () => {
@@ -42,9 +54,7 @@ describe("buildReminderEmail", () => {
         expect(v.payload.player_id).toBe("player-123");
         expect(v.payload.game_id).toBe("game-456");
         expect(v.payload.status).toBe(status);
-        const delta = v.payload.expires_at - Date.now();
-        expect(delta).toBeGreaterThan(7 * 60 * 60 * 1000);
-        expect(delta).toBeLessThan(9 * 60 * 60 * 1000);
+        expect(v.payload.expires_at).toBe(NOW + 8 * 60 * 60 * 1000);
       }
     }
   });
@@ -57,5 +67,17 @@ describe("buildReminderEmail", () => {
   it("falls back gracefully when name is empty", () => {
     const email = buildReminderEmail({ ...baseInput, playerName: "" });
     expect(email.html).toMatch(/old ?man ?hoops/i);
+  });
+
+  it("escapes HTML in player name and game date", () => {
+    const email = buildReminderEmail({
+      ...baseInput,
+      playerName: `Evil <script>alert(1)</script>`,
+      gameDateText: `Saturday & "Sunday"`,
+    });
+    expect(email.html).not.toContain("<script>");
+    expect(email.html).toContain("&lt;script&gt;");
+    expect(email.html).toContain("Saturday &amp;");
+    expect(email.html).toContain("&quot;Sunday&quot;");
   });
 });

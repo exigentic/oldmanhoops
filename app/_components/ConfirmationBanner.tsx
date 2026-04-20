@@ -1,9 +1,9 @@
 import type { RsvpStatus } from "@/lib/scoreboard";
 
 const MESSAGES: Record<RsvpStatus, { text: string; color: string }> = {
-  in: { text: "You're In!", color: "bg-emerald-950 border-emerald-800 text-emerald-300" },
-  out: { text: "You're Out", color: "bg-red-950 border-red-800 text-red-300" },
-  maybe: { text: "Marked as Maybe", color: "bg-amber-950 border-amber-800 text-amber-300" },
+  in: { text: "You're In!", color: "bg-emerald-50 border-emerald-300 text-emerald-800" },
+  out: { text: "You're Out", color: "bg-red-50 border-red-300 text-red-800" },
+  maybe: { text: "Marked as Maybe", color: "bg-sky-50 border-sky-300 text-sky-800" },
 };
 
 export function ConfirmationBanner({

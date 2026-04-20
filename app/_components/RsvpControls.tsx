@@ -4,9 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import type { CurrentRsvp, RsvpStatus } from "@/lib/scoreboard";
 
 const STATUSES: { key: RsvpStatus; label: string; activeClass: string }[] = [
-  { key: "in", label: "In", activeClass: "bg-emerald-400 text-neutral-950" },
-  { key: "out", label: "Out", activeClass: "bg-red-400 text-neutral-950" },
-  { key: "maybe", label: "Maybe", activeClass: "bg-amber-400 text-neutral-950" },
+  { key: "in", label: "In", activeClass: "bg-emerald-600 text-white border-emerald-600" },
+  { key: "out", label: "Out", activeClass: "bg-red-600 text-white border-red-600" },
+  { key: "maybe", label: "Maybe", activeClass: "bg-sky-600 text-white border-sky-600" },
 ];
 
 export function RsvpControls({
@@ -78,7 +78,7 @@ export function RsvpControls({
 
   return (
     <section className="flex flex-col gap-3 w-full">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-600">
         Your RSVP
       </h2>
       <div className="flex gap-2">
@@ -94,8 +94,8 @@ export function RsvpControls({
                 submit({ status: s.key });
               }}
               disabled={submitting}
-              className={`flex-1 rounded-md border border-neutral-700 px-3 py-2 font-semibold disabled:opacity-50 ${
-                pressed ? s.activeClass : "bg-neutral-900 text-neutral-300"
+              className={`flex-1 rounded-md border px-3 py-2 font-semibold disabled:opacity-50 ${
+                pressed ? s.activeClass : "bg-white text-neutral-700 border-neutral-300"
               }`}
             >
               {s.label}
@@ -104,7 +104,7 @@ export function RsvpControls({
         })}
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-sm text-neutral-400">Guests?</span>
+        <span className="text-sm text-neutral-600">Guests?</span>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -115,11 +115,11 @@ export function RsvpControls({
               setGuests(next);
               submit({ guests: next });
             }}
-            className="w-8 h-8 rounded-full bg-neutral-800 text-neutral-100 disabled:opacity-30"
+            className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
           >
             −
           </button>
-          <span aria-label="guests" className="min-w-[1.5rem] text-center font-semibold">
+          <span aria-label="guests" className="min-w-[1.5rem] text-center font-semibold text-neutral-900">
             {guests}
           </span>
           <button
@@ -131,21 +131,21 @@ export function RsvpControls({
               setGuests(next);
               submit({ guests: next });
             }}
-            className="w-8 h-8 rounded-full bg-neutral-800 text-neutral-100 disabled:opacity-30"
+            className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
           >
             +
           </button>
         </div>
       </div>
-      <label className="flex flex-col gap-1 text-sm text-neutral-300">
+      <label className="flex flex-col gap-1 text-sm text-neutral-700">
         <span className="flex items-center justify-between">
           <span>Note</span>
           <span aria-live="polite" className="text-xs">
             {noteState === "saving" && (
-              <span className="text-neutral-400">Saving…</span>
+              <span className="text-neutral-500">Saving…</span>
             )}
             {noteState === "saved" && (
-              <span className="text-emerald-400">Saved ✓</span>
+              <span className="text-emerald-600">Saved ✓</span>
             )}
           </span>
         </span>
@@ -167,10 +167,10 @@ export function RsvpControls({
             }
           }}
           placeholder="e.g., running 15 min late"
-          className="rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-neutral-100"
+          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
       </label>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
     </section>
   );
 }

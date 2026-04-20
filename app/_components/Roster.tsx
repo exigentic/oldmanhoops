@@ -3,9 +3,9 @@ import type { RosterEntry } from "@/lib/scoreboard";
 const ORDER: RosterEntry["status"][] = ["in", "maybe", "out"];
 const LABEL: Record<RosterEntry["status"], string> = { in: "In", out: "Out", maybe: "Maybe" };
 const HEADING_CLASS: Record<RosterEntry["status"], string> = {
-  in: "text-emerald-400",
-  maybe: "text-amber-400",
-  out: "text-red-400",
+  in: "text-emerald-700",
+  maybe: "text-sky-700",
+  out: "text-red-700",
 };
 
 export function Roster({ entries }: { entries: RosterEntry[] }) {
@@ -22,15 +22,15 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
             <h2 className={`text-sm font-semibold uppercase tracking-wide mb-2 ${HEADING_CLASS[status]}`}>
               {LABEL[status]}
             </h2>
-            <ul className="flex flex-col gap-2 text-neutral-200">
+            <ul className="flex flex-col gap-2 text-neutral-900">
               {grouped[status].map((e, i) => (
                 <li key={`${e.name}-${i}`} className="flex flex-col">
                   <span className="font-medium">
                     {e.name}
-                    {e.guests > 0 && <span className="text-neutral-400"> +{e.guests}</span>}
+                    {e.guests > 0 && <span className="text-neutral-500"> +{e.guests}</span>}
                   </span>
                   {e.note && (
-                    <span className="text-xs text-neutral-400 break-words">{e.note}</span>
+                    <span className="text-xs text-neutral-500 break-words">{e.note}</span>
                   )}
                 </li>
               ))}

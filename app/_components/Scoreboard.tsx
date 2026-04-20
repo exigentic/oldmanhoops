@@ -45,7 +45,7 @@ export function Scoreboard({
 
   if (data.state === "no-game") {
     return (
-      <div className="text-center text-neutral-400">
+      <div className="text-center text-neutral-600">
         <p className="text-lg">No game today.</p>
       </div>
     );
@@ -54,8 +54,8 @@ export function Scoreboard({
   if (data.state === "cancelled") {
     return (
       <div className="text-center">
-        <p className="text-lg text-red-400 font-semibold">Game cancelled</p>
-        {data.reason && <p className="text-sm text-neutral-400 mt-1">{data.reason}</p>}
+        <p className="text-lg text-red-700 font-semibold">Game cancelled</p>
+        {data.reason && <p className="text-sm text-neutral-600 mt-1">{data.reason}</p>}
       </div>
     );
   }

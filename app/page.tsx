@@ -25,10 +25,10 @@ export default async function Home({
   });
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-neutral-950 text-neutral-100 p-6 pt-8 gap-6">
+    <main className="min-h-screen flex flex-col items-center bg-neutral-50 text-neutral-900 p-6 pt-8 gap-6">
       <header className="flex flex-col items-center gap-2">
         <Image src="/omh.svg" alt="OldManHoops" width={48} height={48} />
-        <h1 className="text-2xl font-bold text-amber-400">OldManHoops</h1>
+        <h1 className="text-2xl font-bold text-amber-600">OldManHoops</h1>
       </header>
 
       <div className="w-full max-w-5xl flex flex-col items-center gap-6">
@@ -41,7 +41,7 @@ export default async function Home({
         {!user && (
           <Link
             href="/join"
-            className="rounded-md bg-amber-400 text-neutral-950 px-4 py-2 font-semibold"
+            className="rounded-md bg-amber-500 text-white px-4 py-2 font-semibold hover:bg-amber-600"
           >
             Sign Up to Play
           </Link>

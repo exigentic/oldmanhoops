@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { getToday } from "@/lib/date";
+import { formatGameDate, getToday } from "@/lib/date";
 import { getTodayScoreboard } from "@/lib/scoreboard";
 import { Scoreboard } from "@/app/_components/Scoreboard";
 
@@ -18,17 +18,22 @@ export default async function Home({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const today = getToday();
   const initial = await getTodayScoreboard(supabase, {
-    today: getToday(),
+    today,
     includeRoster: !!user,
     userId: user?.id,
   });
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-neutral-50 text-neutral-900 p-6 pt-8 gap-6">
-      <header className="flex flex-col items-center gap-2">
-        <Image src="/omh.svg" alt="OldManHoops" width={48} height={48} />
-        <h1 className="text-2xl font-bold text-amber-600">OldManHoops</h1>
+      <header className="flex items-center gap-4">
+        <Image src="/omh.svg" alt="Old Man Hoops" width={56} height={56} />
+        <div className="flex flex-col leading-tight">
+          <h1 className="text-2xl font-bold text-amber-600">Old Man Hoops</h1>
+          <p className="text-sm text-neutral-600">One Athletics at Noon</p>
+          <p className="text-sm text-neutral-500 mt-0.5">{formatGameDate(today)}</p>
+        </div>
       </header>
 
       <div className="w-full max-w-5xl flex flex-col items-center gap-6">

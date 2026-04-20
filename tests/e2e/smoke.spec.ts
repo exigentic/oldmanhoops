@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("homepage shows OldManHoops branding", async ({ page }) => {
+test("homepage shows Old Man Hoops branding", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "OldManHoops" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Old Man Hoops" })).toBeVisible();
 });

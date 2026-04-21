@@ -61,7 +61,7 @@ export function VerifyOtpForm({
           required
           aria-invalid={!!error}
           aria-describedby={error ? "otp-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900 tracking-widest font-mono"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900 tracking-widest font-mono"
         />
       </label>
       {error && (

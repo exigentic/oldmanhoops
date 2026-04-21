@@ -100,7 +100,7 @@ export function RsvpControls({
               setGuests(next);
               submit({ guests: next });
             }}
-            className="w-11 h-11 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
+            className="w-11 h-11 rounded-full bg-stone-200 text-neutral-900 disabled:opacity-30"
           >
             −
           </button>
@@ -121,7 +121,7 @@ export function RsvpControls({
               setGuests(next);
               submit({ guests: next });
             }}
-            className="w-11 h-11 rounded-full bg-neutral-200 text-neutral-900 disabled:opacity-30"
+            className="w-11 h-11 rounded-full bg-stone-200 text-neutral-900 disabled:opacity-30"
           >
             +
           </button>
@@ -132,7 +132,7 @@ export function RsvpControls({
           <label htmlFor="rsvp-note">Note</label>
           <span aria-live="polite" className="text-xs">
             {noteState === "saving" && (
-              <span className="text-neutral-500">Saving…</span>
+              <span className="text-neutral-600">Saving…</span>
             )}
             {noteState === "saved" && (
               <span className="text-emerald-600">Saved ✓</span>
@@ -158,7 +158,7 @@ export function RsvpControls({
           }}
           placeholder="e.g., running 15 min late"
           aria-describedby="rsvp-note-hint"
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
         <span id="rsvp-note-hint" className="sr-only">
           Press Enter or tab away to save.

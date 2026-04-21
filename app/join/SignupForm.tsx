@@ -56,7 +56,7 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
       <label className="flex flex-col gap-1 text-sm text-neutral-700">
         <span className="flex items-baseline gap-2">
           Name
-          <span className="text-xs text-neutral-500 font-normal">
+          <span className="text-xs text-neutral-600 font-normal">
             won&apos;t be shown to non-members
           </span>
         </span>
@@ -67,7 +67,7 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
           required
           aria-invalid={!!error}
           aria-describedby={error ? "signup-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
       </label>
       <label className="flex flex-col gap-1 text-sm text-neutral-700">
@@ -79,13 +79,13 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
           required
           aria-invalid={!!error}
           aria-describedby={error ? "signup-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
       </label>
       <label className="flex flex-col gap-1 text-sm text-neutral-700">
         <span className="flex items-baseline gap-2">
           Phone
-          <span className="text-xs text-neutral-500 font-normal">
+          <span className="text-xs text-neutral-600 font-normal">
             Optional — we&apos;ll use this for SMS reminders when that&apos;s added.
           </span>
         </span>
@@ -96,7 +96,7 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
           autoComplete="tel"
           aria-invalid={!!error}
           aria-describedby={error ? "signup-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
       </label>
       {signupCodeRequired && (
@@ -109,7 +109,7 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
             required
             aria-invalid={!!error}
             aria-describedby={error ? "signup-error" : undefined}
-            className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+            className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
           />
         </label>
       )}

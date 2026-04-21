@@ -27,12 +27,12 @@ export default async function SettingsPage() {
   const pendingEmail = user.new_email ?? null;
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-neutral-50 text-neutral-900 p-6 pt-8 gap-6">
+    <main className="min-h-screen flex flex-col items-center bg-stone-300 text-neutral-900 p-6 pt-8 gap-6">
       <header className="flex items-center gap-4">
         <Image src="/omh.svg" alt="" width={56} height={56} />
         <div className="flex flex-col leading-tight">
           <h1 className="text-2xl font-bold text-indigo-700">Settings</h1>
-          <Link href="/" className="text-sm text-neutral-500 hover:underline">
+          <Link href="/" className="text-sm text-neutral-600 hover:underline">
             ← Back to scoreboard
           </Link>
         </div>

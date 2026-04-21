@@ -30,10 +30,10 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
                 <li key={`${e.name}-${i}`} className="flex flex-col">
                   <span className="font-medium">
                     {e.name}
-                    {e.guests > 0 && <span className="text-neutral-500"> +{e.guests}</span>}
+                    {e.guests > 0 && <span className="text-neutral-600"> +{e.guests}</span>}
                   </span>
                   {e.note && (
-                    <span className="text-xs text-neutral-500 break-words">{e.note}</span>
+                    <span className="text-xs text-neutral-600 break-words">{e.note}</span>
                   )}
                 </li>
               ))}

@@ -174,7 +174,7 @@ export function SettingsForm({
           autoComplete="name"
           aria-invalid={!!nameError}
           aria-describedby={nameError ? "name-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
         <div className="flex items-center gap-3">
           <button
@@ -206,7 +206,7 @@ export function SettingsForm({
         <label htmlFor="phone" className="text-sm text-neutral-700">
           Phone
         </label>
-        <p id="phone-help" className="text-xs text-neutral-500 -mt-1">
+        <p id="phone-help" className="text-xs text-neutral-600 -mt-1">
           Optional — we&apos;ll use this for SMS reminders when that&apos;s added.
         </p>
         <input
@@ -217,7 +217,7 @@ export function SettingsForm({
           autoComplete="tel"
           aria-invalid={!!phoneError}
           aria-describedby={phoneError ? "phone-error phone-help" : "phone-help"}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
         <div className="flex items-center gap-3">
           <button
@@ -257,7 +257,7 @@ export function SettingsForm({
           autoComplete="email"
           aria-invalid={!!emailError}
           aria-describedby={emailError ? "email-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          className="rounded-md bg-stone-100 border border-stone-500 px-3 py-2 text-neutral-900"
         />
         <button
           type="submit"

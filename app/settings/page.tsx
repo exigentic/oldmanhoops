@@ -17,7 +17,7 @@ export default async function SettingsPage() {
 
   const { data: player, error: playerErr } = await supabase
     .from("players")
-    .select("name, reminder_email, active")
+    .select("name, phone, reminder_email, active")
     .eq("id", user.id)
     .single();
   if (playerErr) {
@@ -41,6 +41,7 @@ export default async function SettingsPage() {
       <SettingsForm
         initialName={player?.name ?? ""}
         initialEmail={user.email ?? ""}
+        initialPhone={player?.phone ?? null}
         initialReminderEmail={player?.reminder_email ?? true}
         initialActive={player?.active ?? true}
         pendingEmail={pendingEmail}

@@ -44,15 +44,18 @@ export default async function Home({
         />
 
         {!user && (
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-3">
             <Link
               href="/join"
               className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold hover:bg-indigo-700"
             >
               Sign Up to Play
             </Link>
-            <Link href="/login" className="text-sm text-neutral-500 hover:underline">
-              Already a member? Log in
+            <Link
+              href="/login"
+              className="rounded-md border border-indigo-600 bg-white text-indigo-700 px-4 py-2 font-semibold hover:bg-indigo-50"
+            >
+              Log in
             </Link>
           </div>
         )}

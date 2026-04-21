@@ -78,16 +78,17 @@ describe("POST /api/auth/signup", () => {
     const user = list.users.find((u) => u.email === email);
     expect(user).toBeTruthy(); // invited user should exist
 
-    const { data: player, error } = await admin
-      .from("players")
-      .select("phone")
-      .eq("id", user!.id)
-      .single();
-    expect(error).toBeNull();
-    expect(player?.phone).toBe("5551234567");
-
-    // Teardown — delete the invited user (cascades to players).
-    await admin.auth.admin.deleteUser(user!.id);
+    try {
+      const { data: player, error } = await admin
+        .from("players")
+        .select("phone")
+        .eq("id", user!.id)
+        .single();
+      expect(error).toBeNull();
+      expect(player?.phone).toBe("5551234567");
+    } finally {
+      await admin.auth.admin.deleteUser(user!.id);
+    }
   });
 
   it("accepts a signup without phone (key absent)", async () => {

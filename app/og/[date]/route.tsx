@@ -15,6 +15,9 @@ const logoDataUrl = (() => {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 })();
 
+const interSemiBold = readFileSync(path.join(process.cwd(), "app", "og", "fonts", "Inter-SemiBold.ttf"));
+const interBlack = readFileSync(path.join(process.cwd(), "app", "og", "fonts", "Inter-Black.ttf"));
+
 const NAVY = "#1f438b";
 const RED = "#c9102e";
 const BG = "#fafaf9";
@@ -34,7 +37,7 @@ function card(date: string, data: OgCardData) {
         height: "100%",
         display: "flex",
         background: BG,
-        fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+        fontFamily: "Inter",
         color: "#111827",
       }}
     >
@@ -97,7 +100,7 @@ function card(date: string, data: OgCardData) {
                   lineHeight: 0.82,
                 }}
               >
-                {data.in}
+                {String(data.in)}
               </div>
               <div
                 style={{
@@ -120,7 +123,7 @@ function card(date: string, data: OgCardData) {
                   lineHeight: 0.82,
                 }}
               >
-                {data.maybe}
+                {String(data.maybe)}
               </div>
               <div
                 style={{
@@ -205,6 +208,10 @@ export async function GET(
   const img = new ImageResponse(card(date, data), {
     width: 1200,
     height: 630,
+    fonts: [
+      { name: "Inter", data: interSemiBold, weight: 600, style: "normal" },
+      { name: "Inter", data: interBlack, weight: 900, style: "normal" },
+    ],
   });
 
   const headers = new Headers(img.headers);

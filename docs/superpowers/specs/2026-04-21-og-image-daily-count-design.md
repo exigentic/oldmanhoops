@@ -92,7 +92,7 @@ No `.png` suffix in the URL — the route file is a standard App Router route an
 
 ## Testing
 
-### Unit — `lib/og.test.ts`
+### Unit — `tests/unit/og-counts.test.ts`
 
 - Returns `{ state: "no-game" }` when no `games` row exists for the date.
 - Returns `{ state: "cancelled", reason }` when `games.status = 'cancelled'`.

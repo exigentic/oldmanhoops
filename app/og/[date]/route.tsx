@@ -78,7 +78,7 @@ function card(date: string, data: OgCardData) {
       >
         <div
           style={{
-            fontSize: 32,
+            fontSize: 40,
             fontWeight: 900,
             color: NAVY,
             letterSpacing: 0.3,
@@ -104,7 +104,7 @@ function card(date: string, data: OgCardData) {
               </div>
               <div
                 style={{
-                  fontSize: 62,
+                  fontSize: 78,
                   fontWeight: 800,
                   color: NAVY,
                   letterSpacing: 3,
@@ -127,7 +127,7 @@ function card(date: string, data: OgCardData) {
               </div>
               <div
                 style={{
-                  fontSize: 46,
+                  fontSize: 58,
                   fontWeight: 800,
                   color: RED,
                   letterSpacing: 3,

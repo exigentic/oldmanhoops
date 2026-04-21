@@ -1,6 +1,5 @@
 /** @jest-environment node */
 import { Pool } from "pg";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { GET } from "@/app/og/[date]/route";
 
 const CONN = process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:55322/postgres";

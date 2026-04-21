@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { buildReminderEmail } from "@/lib/email/reminder";
 import { sendEmail, notifyAdmin } from "@/lib/email/send";
 import { requireCronAuth } from "@/lib/cron-auth";
+import { siteOrigin } from "@/lib/site-url";
 
 interface PlayerRow {
   id: string;
@@ -65,7 +66,7 @@ export async function GET(request: Request): Promise<Response> {
       );
     }
 
-    const baseUrl = new URL(request.url).origin;
+    const baseUrl = siteOrigin(request);
     const gameDateText = formatGameDate(today);
     const gameId = game.id;
     const CONCURRENCY = 2;

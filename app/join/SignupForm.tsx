@@ -80,7 +80,7 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
         <span className="flex items-baseline gap-2">
           Phone
           <span className="text-xs text-neutral-500 font-normal">
-            optional — we&apos;ll use this for SMS reminders when that&apos;s added
+            Optional — we&apos;ll use this for SMS reminders when that&apos;s added.
           </span>
         </span>
         <input

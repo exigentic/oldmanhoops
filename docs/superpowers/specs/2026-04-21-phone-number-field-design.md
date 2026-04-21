@@ -114,8 +114,8 @@ The section sits after Name and before Email, so the visual order is: Name → P
 
 Add a phone input between the Email field and the Access code field:
 
-- Label: `Phone (optional)`.
-- Helper text: *"We'll use this for SMS reminders when that's added."*
+- Label: `Phone`.
+- Helper text: *"Optional — we'll use this for SMS reminders when that's added."* (same wording as settings)
 - `<input type="tel" autoComplete="tel">`, not `required`.
 - Value held in local state. On submit, the trimmed value is included in the request body only if non-empty; otherwise the `phone` key is omitted.
 - On server validation error, the existing error display already handles the shape (error string shown under the form).
@@ -128,7 +128,7 @@ Add a phone input between the Email field and the Access code field:
 - **API — extend `/api/auth/signup` tests (or add if none):** signup without phone (absent key), signup with valid phone (normalized on the way in), signup with invalid phone → 400.
 - **E2E — Playwright:**
   - Settings spec: fill phone, save, reload, assert persisted; clear phone, save, reload, assert gone.
-  - Signup spec: sign up with a phone including formatting chars, then query `players.phone` (via an existing test helper or admin client) and assert it equals the normalized digits.
+- **Signup-with-phone coverage lives in the signup API integration test** (`tests/unit/api-signup.test.ts`) rather than an e2e spec. The existing signup e2e is skipped on non-chromium to avoid Supabase auth-email rate-limiting, and an integration test that calls the route and then queries `players.phone` via an admin client covers the same end-to-end path (route → invite metadata → trigger → row) without consuming the rate-limit budget.
 
 ## Rollout
 

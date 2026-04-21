@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizePhone, InvalidPhoneError } from "@/lib/phone";
 
 interface ProfileBody {
   name?: string;
   reminder_email?: boolean;
   active?: boolean;
+  phone?: string | null;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -59,6 +61,23 @@ export async function POST(request: Request): Promise<Response> {
       return NextResponse.json({ error: "active must be boolean" }, { status: 400 });
     }
     update.active = body.active;
+  }
+
+  if (body.phone !== undefined) {
+    if (body.phone !== null && typeof body.phone !== "string") {
+      return NextResponse.json(
+        { error: "phone must be a string or null" },
+        { status: 400 }
+      );
+    }
+    try {
+      update.phone = normalizePhone(body.phone);
+    } catch (err) {
+      if (err instanceof InvalidPhoneError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
   }
 
   if (Object.keys(update).length === 0) {

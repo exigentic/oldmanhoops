@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { validateSignupCode } from "@/lib/signup-code";
-import { siteOrigin } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface SignupBody {
@@ -33,7 +32,6 @@ export async function POST(request: Request): Promise<Response> {
   const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
     data: { name },
-    redirectTo: `${siteOrigin(request)}/auth/callback`,
   });
 
   if (error) {

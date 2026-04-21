@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { siteOrigin } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 interface LoginBody {
@@ -23,7 +22,6 @@ export async function POST(request: Request): Promise<Response> {
     email: body.email,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: `${siteOrigin(request)}/auth/callback`,
     },
   });
 

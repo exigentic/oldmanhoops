@@ -71,19 +71,15 @@ export function Scoreboard({
         />
       )}
       {isMember ? (
-        <div className="flex flex-col md:flex-row gap-6 md:items-start">
-          <div className={data.roster && data.roster.length > 0 ? "md:w-1/2" : "w-full"}>
-            <RsvpControls
-              counts={data.counts}
-              current={data.currentUserRsvp}
-              focusNoteOnMount={focusNoteOnMount}
-              onUpdated={refresh}
-            />
-          </div>
+        <div className="flex flex-col gap-6">
+          <RsvpControls
+            counts={data.counts}
+            current={data.currentUserRsvp}
+            focusNoteOnMount={focusNoteOnMount}
+            onUpdated={refresh}
+          />
           {data.roster && data.roster.length > 0 && (
-            <div className="md:w-1/2">
-              <Roster entries={data.roster} />
-            </div>
+            <Roster entries={data.roster} />
           )}
         </div>
       ) : (

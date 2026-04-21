@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { validateSignupCode } from "@/lib/signup-code";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizePhone, InvalidPhoneError } from "@/lib/phone";
 
 interface SignupBody {
   email?: string;
   name?: string;
   code?: string;
+  phone?: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -17,7 +19,7 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { email, name, code } = body;
+  const { email, name, code, phone } = body;
 
   if (env.SIGNUP_CODE_REQUIRED) {
     if (!email || !name || !code) {
@@ -38,9 +40,27 @@ export async function POST(request: Request): Promise<Response> {
     }
   }
 
+  // Phone is optional; treat empty/whitespace-only as absent.
+  let normalizedPhone: string | null = null;
+  if (typeof phone === "string" && phone.trim().length > 0) {
+    try {
+      normalizedPhone = normalizePhone(phone);
+    } catch (err) {
+      if (err instanceof InvalidPhoneError) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      throw err;
+    }
+  }
+
+  const metadata: Record<string, string> = { name };
+  if (normalizedPhone !== null) {
+    metadata.phone = normalizedPhone;
+  }
+
   const supabase = createAdminClient();
   const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-    data: { name },
+    data: metadata,
   });
 
   if (error) {

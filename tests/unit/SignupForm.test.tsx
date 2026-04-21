@@ -56,6 +56,43 @@ describe("SignupForm", () => {
       await user.click(screen.getByRole("button", { name: /sign up/i }));
       expect(await screen.findByText(/invalid signup code/i)).toBeInTheDocument();
     });
+
+    it("renders an optional phone input", () => {
+      render(<SignupForm initialCode="" signupCodeRequired={true} />);
+      expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/phone/i)).not.toBeRequired();
+    });
+
+    it("omits phone from the request body when left blank", async () => {
+      const user = userEvent.setup();
+      render(<SignupForm initialCode="" signupCodeRequired={true} />);
+      await user.type(screen.getByLabelText(/name/i), "No Phone");
+      await user.type(screen.getByLabelText(/email/i), "nop@example.com");
+      await user.type(screen.getByLabelText(/access code/i), "the-code");
+      await user.click(screen.getByRole("button", { name: /sign up/i }));
+      const call = (global.fetch as jest.Mock).mock.calls.find(
+        (c) => c[0] === "/api/auth/signup"
+      );
+      expect(call).toBeDefined();
+      const sent = JSON.parse(call![1].body);
+      expect(sent).not.toHaveProperty("phone");
+    });
+
+    it("includes the raw phone string in the request body when filled", async () => {
+      const user = userEvent.setup();
+      render(<SignupForm initialCode="" signupCodeRequired={true} />);
+      await user.type(screen.getByLabelText(/name/i), "With Phone");
+      await user.type(screen.getByLabelText(/email/i), "wp@example.com");
+      await user.type(screen.getByLabelText(/phone/i), "(555) 123-4567");
+      await user.type(screen.getByLabelText(/access code/i), "the-code");
+      await user.click(screen.getByRole("button", { name: /sign up/i }));
+      const call = (global.fetch as jest.Mock).mock.calls.find(
+        (c) => c[0] === "/api/auth/signup"
+      );
+      expect(call).toBeDefined();
+      const sent = JSON.parse(call![1].body);
+      expect(sent.phone).toBe("(555) 123-4567");
+    });
   });
 
   describe("when signup code is not required", () => {

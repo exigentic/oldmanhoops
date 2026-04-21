@@ -27,6 +27,7 @@ function useFlashValue<T>(durationMs: number) {
 interface SettingsFormProps {
   initialName: string;
   initialEmail: string;
+  initialPhone: string | null;
   initialReminderEmail: boolean;
   initialActive: boolean;
   pendingEmail?: string | null;
@@ -56,6 +57,7 @@ async function postJson(
 export function SettingsForm({
   initialName,
   initialEmail,
+  initialPhone,
   initialReminderEmail,
   initialActive,
   pendingEmail = null,
@@ -77,6 +79,29 @@ export function SettingsForm({
       flashNameSaved(true);
     } else {
       setNameError(r.error ?? "Update failed");
+    }
+  }
+
+  // Phone section
+  const [phone, setPhone] = useState(initialPhone ?? "");
+  const [savedPhone, setSavedPhone] = useState(initialPhone ?? "");
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneSaved, flashPhoneSaved] = useFlashValue<true>(2000);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  async function savePhone() {
+    const trimmed = phone.trim();
+    setPhone(trimmed);
+    setPhoneSaving(true);
+    setPhoneError(null);
+    const payload = trimmed.length === 0 ? null : trimmed;
+    const r = await postJson("/api/profile", { phone: payload });
+    setPhoneSaving(false);
+    if (r.ok) {
+      setSavedPhone(trimmed);
+      flashPhoneSaved(true);
+    } else {
+      setPhoneError(r.error ?? "Update failed");
     }
   }
 
@@ -166,6 +191,49 @@ export function SettingsForm({
         {nameError && (
           <p id="name-error" role="alert" className="text-sm text-red-600">
             {nameError}
+          </p>
+        )}
+      </form>
+
+      {/* Phone */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          savePhone();
+        }}
+        className="flex flex-col gap-2"
+      >
+        <label htmlFor="phone" className="text-sm text-neutral-700">
+          Phone
+        </label>
+        <p id="phone-help" className="text-xs text-neutral-500 -mt-1">
+          Optional — we&apos;ll use this for SMS reminders when that&apos;s added.
+        </p>
+        <input
+          id="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          autoComplete="tel"
+          aria-invalid={!!phoneError}
+          aria-describedby={phoneError ? "phone-error phone-help" : "phone-help"}
+          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+        />
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={phoneSaving || phone.trim() === savedPhone}
+            className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold disabled:opacity-50 hover:bg-indigo-700"
+          >
+            {phoneSaving ? "Saving…" : "Save phone"}
+          </button>
+          <span aria-live="polite" className="text-sm">
+            {phoneSaved && <span className="text-emerald-600">Saved ✓</span>}
+          </span>
+        </div>
+        {phoneError && (
+          <p id="phone-error" role="alert" className="text-sm text-red-600">
+            {phoneError}
           </p>
         )}
       </form>

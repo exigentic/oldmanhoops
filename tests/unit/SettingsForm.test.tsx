@@ -5,6 +5,7 @@ import { SettingsForm } from "@/app/settings/SettingsForm";
 const BASE = {
   initialName: "Jordan",
   initialEmail: "jordan@example.com",
+  initialPhone: null as string | null,
   initialReminderEmail: true,
   initialActive: true,
   pendingEmail: null as string | null,
@@ -143,5 +144,62 @@ describe("SettingsForm", () => {
     // After the failed POST resolves, the checkbox should be back to checked
     await screen.findByRole("alert");
     expect(cb).toBeChecked();
+  });
+
+  it("pre-fills phone from initialPhone", () => {
+    render(<SettingsForm {...BASE} initialPhone="5551234567" />);
+    expect(screen.getByLabelText(/^Phone$/i)).toHaveValue("5551234567");
+  });
+
+  it("shows empty phone input when initialPhone is null", () => {
+    render(<SettingsForm {...BASE} />);
+    expect(screen.getByLabelText(/^Phone$/i)).toHaveValue("");
+  });
+
+  it("POSTs normalized-entry phone to /api/profile when Save phone clicked", async () => {
+    const user = userEvent.setup();
+    render(<SettingsForm {...BASE} />);
+    const input = screen.getByLabelText(/^Phone$/i);
+    await user.type(input, "(555) 123-4567");
+    await user.click(screen.getByRole("button", { name: /save phone/i }));
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/profile",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ phone: "(555) 123-4567" }),
+      })
+    );
+  });
+
+  it("POSTs { phone: null } when saving an empty phone input", async () => {
+    const user = userEvent.setup();
+    render(<SettingsForm {...BASE} initialPhone="5551234567" />);
+    const input = screen.getByLabelText(/^Phone$/i);
+    await user.clear(input);
+    await user.click(screen.getByRole("button", { name: /save phone/i }));
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/profile",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ phone: null }),
+      })
+    );
+  });
+
+  it("disables Save phone button when the input matches the last saved value", () => {
+    render(<SettingsForm {...BASE} initialPhone="5551234567" />);
+    expect(screen.getByRole("button", { name: /save phone/i })).toBeDisabled();
+  });
+
+  it("shows the server error when phone save fails", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "Phone must be 10–15 digits" }),
+    });
+    const user = userEvent.setup();
+    render(<SettingsForm {...BASE} />);
+    await user.type(screen.getByLabelText(/^Phone$/i), "bad");
+    await user.click(screen.getByRole("button", { name: /save phone/i }));
+    expect(await screen.findByText(/10.?15 digits/i)).toBeInTheDocument();
   });
 });

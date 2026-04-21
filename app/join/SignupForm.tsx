@@ -11,6 +11,7 @@ interface SignupFormProps {
 export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState(initialCode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,14 +22,19 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
     setSubmitting(true);
     setError(null);
     try {
-      const body: { name: string; email: string; code?: string } = { name, email };
-      if (signupCodeRequired) {
-        body.code = code;
-      }
+      const trimmedPhone = phone.trim();
+      const payload: {
+        name: string;
+        email: string;
+        code?: string;
+        phone?: string;
+      } = { name, email };
+      if (signupCodeRequired) payload.code = code;
+      if (trimmedPhone.length > 0) payload.phone = trimmedPhone;
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -71,6 +77,23 @@ export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps)
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          aria-invalid={!!error}
+          aria-describedby={error ? "signup-error" : undefined}
+          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+        />
+      </label>
+      <label className="flex flex-col gap-1 text-sm text-neutral-700">
+        <span className="flex items-baseline gap-2">
+          Phone
+          <span className="text-xs text-neutral-500 font-normal">
+            Optional — we&apos;ll use this for SMS reminders when that&apos;s added.
+          </span>
+        </span>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          autoComplete="tel"
           aria-invalid={!!error}
           aria-describedby={error ? "signup-error" : undefined}
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"

@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { VerifyOtpForm } from "@/app/_components/VerifyOtpForm";
 
-export function SignupForm({ initialCode }: { initialCode: string }) {
+interface SignupFormProps {
+  initialCode: string;
+  signupCodeRequired: boolean;
+}
+
+export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -21,9 +26,10 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
       const payload: {
         name: string;
         email: string;
-        code: string;
+        code?: string;
         phone?: string;
-      } = { name, email, code };
+      } = { name, email };
+      if (signupCodeRequired) payload.code = code;
       if (trimmedPhone.length > 0) payload.phone = trimmedPhone;
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -93,18 +99,20 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
       </label>
-      <label className="flex flex-col gap-1 text-sm text-neutral-700">
-        Access code
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          required
-          aria-invalid={!!error}
-          aria-describedby={error ? "signup-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
-        />
-      </label>
+      {signupCodeRequired && (
+        <label className="flex flex-col gap-1 text-sm text-neutral-700">
+          Access code
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            aria-invalid={!!error}
+            aria-describedby={error ? "signup-error" : undefined}
+            className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          />
+        </label>
+      )}
       {error && (
         <p id="signup-error" role="alert" className="text-sm text-red-600">
           {error}

@@ -5,6 +5,17 @@ function require_(name: string, value: string | undefined): string {
   return value;
 }
 
+const signupCodeRequired = process.env.SIGNUP_CODE_REQUIRED === "true";
+
+function signupCode(): string | undefined {
+  if (signupCodeRequired && !process.env.SIGNUP_CODE) {
+    throw new Error(
+      "Missing required env var: SIGNUP_CODE (required when SIGNUP_CODE_REQUIRED=true)"
+    );
+  }
+  return process.env.SIGNUP_CODE;
+}
+
 // NEXT_PUBLIC_* must use literal property access so Next.js inlines them
 // into the client bundle at build time. Dynamic access via process.env[name]
 // does not get inlined and would be undefined in the browser.
@@ -22,7 +33,8 @@ export const env = {
     "SUPABASE_SERVICE_ROLE_KEY",
     process.env.SUPABASE_SERVICE_ROLE_KEY
   ),
-  SIGNUP_CODE: require_("SIGNUP_CODE", process.env.SIGNUP_CODE),
+  SIGNUP_CODE_REQUIRED: signupCodeRequired,
+  SIGNUP_CODE: signupCode(),
   HMAC_SECRET: require_("HMAC_SECRET", process.env.HMAC_SECRET),
   CRON_SECRET: require_("CRON_SECRET", process.env.CRON_SECRET),
   APP_TIMEZONE: require_("APP_TIMEZONE", process.env.APP_TIMEZONE),

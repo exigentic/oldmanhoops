@@ -20,15 +20,24 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const { email, name, code, phone } = body;
-  if (!email || !name || !code) {
-    return NextResponse.json(
-      { error: "email, name, and code are required" },
-      { status: 400 }
-    );
-  }
 
-  if (!validateSignupCode(env.SIGNUP_CODE, code)) {
-    return NextResponse.json({ error: "Invalid signup code" }, { status: 401 });
+  if (env.SIGNUP_CODE_REQUIRED) {
+    if (!email || !name || !code) {
+      return NextResponse.json(
+        { error: "email, name, and code are required" },
+        { status: 400 }
+      );
+    }
+    if (!validateSignupCode(env.SIGNUP_CODE!, code)) {
+      return NextResponse.json({ error: "Invalid signup code" }, { status: 401 });
+    }
+  } else {
+    if (!email || !name) {
+      return NextResponse.json(
+        { error: "email and name are required" },
+        { status: 400 }
+      );
+    }
   }
 
   // Phone is optional; treat empty/whitespace-only as absent.

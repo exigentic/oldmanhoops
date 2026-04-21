@@ -36,7 +36,7 @@ export default async function Home({
         </div>
       </header>
 
-      <div className="w-full max-w-5xl flex flex-col items-center gap-6">
+      <div className="w-full max-w-lg flex flex-col items-center gap-6">
         <Scoreboard
           initial={initial}
           urlStatus={urlStatus ?? null}

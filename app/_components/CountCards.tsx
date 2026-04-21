@@ -86,7 +86,7 @@ function Card({
       <div aria-label={`${config.title} count`} className={`text-3xl md:text-5xl font-bold ${config.valueClass}`}>
         {value}
       </div>
-      <div className={`mt-1 text-xs md:text-sm uppercase tracking-wide font-semibold ${config.titleClass}`}>
+      <div className={`mt-1 text-sm md:text-base uppercase tracking-wide font-semibold ${config.titleClass}`}>
         {config.title}
       </div>
     </>

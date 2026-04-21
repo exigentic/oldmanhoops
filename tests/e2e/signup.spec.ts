@@ -11,17 +11,26 @@ test("signup form accepts valid input and reveals OTP step", async ({
     "signup only runs on chromium to avoid Supabase auth-email rate limit"
   );
 
-  const code = process.env.SIGNUP_CODE;
-  expect(code, "SIGNUP_CODE must be set in .env.local").toBeTruthy();
-
+  const signupCodeRequired = process.env.SIGNUP_CODE_REQUIRED === "true";
   const email = `e2e-signup-${Date.now()}@example.com`;
-  await page.goto(`/join?code=${code}`);
 
-  // Code input pre-filled from the URL
-  await expect(page.getByLabel(/Access code/i)).toHaveValue(code!);
+  if (signupCodeRequired) {
+    const code = process.env.SIGNUP_CODE;
+    expect(
+      code,
+      "SIGNUP_CODE must be set in .env.local when SIGNUP_CODE_REQUIRED=true"
+    ).toBeTruthy();
 
-  await page.getByLabel(/^Name/i).fill("E2E Signup");
-  await page.getByLabel(/^Email$/i).fill(email);
+    await page.goto(`/join?code=${code}`);
+    await expect(page.getByLabel(/Access code/i)).toHaveValue(code!);
+    await page.getByLabel(/^Name/i).fill("E2E Signup");
+    await page.getByLabel(/^Email$/i).fill(email);
+  } else {
+    await page.goto("/join");
+    await expect(page.getByLabel(/Access code/i)).toHaveCount(0);
+    await page.getByLabel(/^Name/i).fill("E2E Signup");
+    await page.getByLabel(/^Email$/i).fill(email);
+  }
 
   await page.getByRole("button", { name: /Sign up/i }).click();
 

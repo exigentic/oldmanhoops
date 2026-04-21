@@ -36,4 +36,10 @@ describe("getSiteOrigin", () => {
     process.env.VERCEL_URL = "should-be-ignored.vercel.app";
     expect(load()()).toBe("https://oldmanhoops.example.com");
   });
+
+  it("strips protocol prefix from VERCEL_URL if present", () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.VERCEL_URL = "https://oldmanhoops-git-main.vercel.app";
+    expect(load()()).toBe("https://oldmanhoops-git-main.vercel.app");
+  });
 });

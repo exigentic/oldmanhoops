@@ -6,6 +6,8 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 import { getOgCounts, type OgCardData } from "@/lib/og";
 
+export const runtime = "nodejs";
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const logoDataUrl = (() => {
@@ -192,7 +194,13 @@ export async function GET(
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const data = await getOgCounts(supabase, date);
+  let data: OgCardData;
+  try {
+    data = await getOgCounts(supabase, date);
+  } catch (err) {
+    console.error(`[og] getOgCounts failed for date ${date}:`, err);
+    return new Response("internal error", { status: 500 });
+  }
 
   const img = new ImageResponse(card(date, data), {
     width: 1200,

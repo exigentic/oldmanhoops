@@ -2,6 +2,22 @@
 import { Pool } from "pg";
 import { GET } from "@/app/og/[date]/route";
 
+// `var` is hoisted above the jest.mock factory (which jest also hoists), so
+// the factory can close over it safely. `let`/`const` would not work here.
+// eslint-disable-next-line no-var
+var mockGetOgCounts: jest.Mock;
+
+jest.mock("@/lib/og", () => {
+  const real = jest.requireActual<typeof import("@/lib/og")>("@/lib/og");
+  // Build the jest.fn with the real implementation as the default.
+  const fn: jest.Mock = jest.fn((...args: Parameters<typeof real.getOgCounts>) =>
+    real.getOgCounts(...args)
+  );
+  // Assign into the hoisted var so tests can reach it.
+  mockGetOgCounts = fn;
+  return { ...real, getOgCounts: fn };
+});
+
 const CONN = process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:55322/postgres";
 
 let pool: Pool;
@@ -12,6 +28,14 @@ beforeAll(() => {
 
 afterAll(async () => {
   await pool.end();
+});
+
+afterEach(() => {
+  // Restore the real-implementation default after any test that overrides it.
+  const real = jest.requireActual<typeof import("@/lib/og")>("@/lib/og");
+  mockGetOgCounts.mockImplementation(
+    (...args: Parameters<typeof real.getOgCounts>) => real.getOgCounts(...args)
+  );
 });
 
 async function seedGame(date: string, status: "scheduled" | "cancelled" = "scheduled", reason: string | null = null) {
@@ -87,5 +111,11 @@ describe("GET /og/[date]", () => {
     } finally {
       await cleanupGame(date);
     }
+  });
+
+  it("returns 500 when getOgCounts throws", async () => {
+    mockGetOgCounts.mockRejectedValueOnce(new Error("boom"));
+    const res = await call("2097-06-05");
+    expect(res.status).toBe(500);
   });
 });

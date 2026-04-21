@@ -184,4 +184,70 @@ describe("initial schema", () => {
       client.release();
     }
   });
+
+  it("copies phone from raw_user_meta_data when present", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, aud, role, raw_user_meta_data)
+           VALUES (gen_random_uuid(), 'phone-trigger@example.com', '', now(), 'authenticated', 'authenticated',
+                   '{"name":"P","phone":"5551234567"}'::jsonb)
+           RETURNING id`
+      );
+      const userId = res.rows[0].id;
+      const playerRes = await client.query(
+        `SELECT phone FROM public.players WHERE id = $1`,
+        [userId]
+      );
+      expect(playerRes.rows[0].phone).toBe("5551234567");
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
+
+  it("leaves phone null when raw_user_meta_data lacks phone key", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, aud, role, raw_user_meta_data)
+           VALUES (gen_random_uuid(), 'no-phone@example.com', '', now(), 'authenticated', 'authenticated',
+                   '{"name":"X"}'::jsonb)
+           RETURNING id`
+      );
+      const userId = res.rows[0].id;
+      const playerRes = await client.query(
+        `SELECT phone FROM public.players WHERE id = $1`,
+        [userId]
+      );
+      expect(playerRes.rows[0].phone).toBeNull();
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
+
+  it("leaves phone null when raw_user_meta_data.phone is empty string", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const res = await client.query(
+        `INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, aud, role, raw_user_meta_data)
+           VALUES (gen_random_uuid(), 'empty-phone@example.com', '', now(), 'authenticated', 'authenticated',
+                   '{"name":"X","phone":""}'::jsonb)
+           RETURNING id`
+      );
+      const userId = res.rows[0].id;
+      const playerRes = await client.query(
+        `SELECT phone FROM public.players WHERE id = $1`,
+        [userId]
+      );
+      expect(playerRes.rows[0].phone).toBeNull();
+    } finally {
+      await client.query("ROLLBACK");
+      client.release();
+    }
+  });
 });

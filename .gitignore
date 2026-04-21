@@ -45,6 +45,7 @@ next-env.d.ts
 
 # superpowers
 .superpowers/
+.worktrees/
 
 # local env
 .env.local

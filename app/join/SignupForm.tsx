@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { VerifyOtpForm } from "@/app/_components/VerifyOtpForm";
 
-export function SignupForm({ initialCode }: { initialCode: string }) {
+interface SignupFormProps {
+  initialCode: string;
+  signupCodeRequired: boolean;
+}
+
+export function SignupForm({ initialCode, signupCodeRequired }: SignupFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState(initialCode);
@@ -16,10 +21,14 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
     setSubmitting(true);
     setError(null);
     try {
+      const body: { name: string; email: string; code?: string } = { name, email };
+      if (signupCodeRequired) {
+        body.code = code;
+      }
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, code }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -67,18 +76,20 @@ export function SignupForm({ initialCode }: { initialCode: string }) {
           className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
         />
       </label>
-      <label className="flex flex-col gap-1 text-sm text-neutral-700">
-        Access code
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          required
-          aria-invalid={!!error}
-          aria-describedby={error ? "signup-error" : undefined}
-          className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
-        />
-      </label>
+      {signupCodeRequired && (
+        <label className="flex flex-col gap-1 text-sm text-neutral-700">
+          Access code
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            aria-invalid={!!error}
+            aria-describedby={error ? "signup-error" : undefined}
+            className="rounded-md bg-white border border-neutral-300 px-3 py-2 text-neutral-900"
+          />
+        </label>
+      )}
       {error && (
         <p id="signup-error" role="alert" className="text-sm text-red-600">
           {error}

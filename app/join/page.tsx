@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { env } from "@/lib/env";
 import { SignupForm } from "./SignupForm";
 
 export default async function JoinPage({
@@ -8,6 +9,10 @@ export default async function JoinPage({
   searchParams: Promise<{ code?: string }>;
 }) {
   const { code } = await searchParams;
+  const signupCodeRequired = env.SIGNUP_CODE_REQUIRED;
+  const description = signupCodeRequired
+    ? "Enter the group's access code to request a sign-in link."
+    : "Request a sign-in link.";
   return (
     <main className="min-h-screen flex flex-col items-center bg-neutral-50 text-neutral-900 p-6 pt-8 gap-6">
       <header className="flex items-center gap-4">
@@ -21,10 +26,11 @@ export default async function JoinPage({
       </header>
 
       <div className="flex flex-col items-center gap-6 w-full max-w-sm">
-        <p className="text-sm text-neutral-600 text-center">
-          Enter the group&apos;s access code to request a sign-in link.
-        </p>
-        <SignupForm initialCode={code ?? ""} />
+        <p className="text-sm text-neutral-600 text-center">{description}</p>
+        <SignupForm
+          initialCode={code ?? ""}
+          signupCodeRequired={signupCodeRequired}
+        />
       </div>
     </main>
   );

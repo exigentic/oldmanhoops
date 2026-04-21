@@ -58,12 +58,16 @@ export default async function Home({
         )}
 
         {user && (
-          <Link
-            href="/settings"
-            className="text-sm text-neutral-500 hover:underline"
-          >
-            Manage Settings
-          </Link>
+          <div className="flex items-center gap-4 text-sm text-neutral-500">
+            <Link href="/settings" className="hover:underline">
+              Manage Settings
+            </Link>
+            <form action="/api/auth/logout" method="post">
+              <button type="submit" className="hover:underline">
+                Log out
+              </button>
+            </form>
+          </div>
         )}
       </div>
     </main>

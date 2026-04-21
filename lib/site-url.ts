@@ -1,5 +1,7 @@
 import { env } from "@/lib/env";
 
+// Request-based origin resolver; its sibling `getSiteOrigin` (below) is for
+// places without a Request object and uses VERCEL_URL as the fallback instead.
 export function siteOrigin(request: Request): string {
   if (env.NEXT_PUBLIC_SITE_URL) {
     return env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "");

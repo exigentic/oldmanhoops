@@ -184,7 +184,7 @@ export async function GET(
   ctx: { params: Promise<{ date: string }> }
 ): Promise<Response> {
   const { date } = await ctx.params;
-  if (!DATE_RE.test(date)) {
+  if (!DATE_RE.test(date) || !DateTime.fromFormat(date, "yyyy-MM-dd").isValid) {
     return new Response("invalid date", { status: 400 });
   }
 

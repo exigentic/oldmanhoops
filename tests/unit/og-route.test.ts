@@ -68,6 +68,11 @@ describe("GET /og/[date]", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 for an impossible calendar date", async () => {
+    const res = await call("2026-13-45");
+    expect(res.status).toBe(400);
+  });
+
   it("returns a PNG image for a scheduled day", async () => {
     const date = "2097-06-01";
     await seedGame(date, "scheduled");

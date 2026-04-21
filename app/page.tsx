@@ -1,11 +1,41 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { formatGameDate, getToday } from "@/lib/date";
 import { getTodayScoreboard } from "@/lib/scoreboard";
 import { Scoreboard } from "@/app/_components/Scoreboard";
+import { getSiteOrigin } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const today = getToday();
+  const origin = getSiteOrigin();
+
+  const base: Metadata = {
+    title: "Old Man Hoops",
+    description: "Daily pickup basketball RSVP",
+  };
+
+  if (!origin) return base;
+
+  const ogUrl = `${origin}/og/${today}`;
+  return {
+    ...base,
+    openGraph: {
+      title: "Old Man Hoops",
+      description: "Daily pickup basketball RSVP",
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: "Old Man Hoops — today's RSVP counts" }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Old Man Hoops",
+      description: "Daily pickup basketball RSVP",
+      images: [ogUrl],
+    },
+  };
+}
 
 export default async function Home({
   searchParams,

@@ -44,7 +44,7 @@ All env reads funnel through this module, which throws at module init if a requi
 Reminder emails carry HMAC-SHA256 signed tokens (`player_id:game_id:status:expires_at`) so a user can RSVP without an active session. `verifyToken` is timing-safe and enforces expiry. Secret lives in `HMAC_SECRET`.
 
 ### Cron (`vercel.json` → `/api/cron/*`)
-Two scheduled routes: `housekeeping` (11:00 UTC) and `remind` (13:00 UTC). Both gated by `lib/cron-auth.ts` using the `CRON_SECRET` Bearer token. Failures call `notifyAdmin()` to email `ADMIN_EMAIL`.
+Two scheduled routes: `housekeeping` (07:00 UTC = 2am EST / 3am EDT) and `remind` (13:00 UTC). Both gated by `lib/cron-auth.ts` using the `CRON_SECRET` Bearer token. Failures call `notifyAdmin()` to email `ADMIN_EMAIL`.
 
 ### Signup gate
 `SIGNUP_CODE_REQUIRED=true` makes `/join` demand `SIGNUP_CODE`. When unset/false, signups are open and `SIGNUP_CODE` is not required — `lib/env.ts` enforces this conditional requirement. UI and validation both honor the flag.

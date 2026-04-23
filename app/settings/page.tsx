@@ -17,7 +17,7 @@ export default async function SettingsPage() {
 
   const { data: player, error: playerErr } = await supabase
     .from("players")
-    .select("name, phone, reminder_email, active")
+    .select("name, phone, reminder_email, active, is_admin")
     .eq("id", user.id)
     .single();
   if (playerErr) {
@@ -31,7 +31,14 @@ export default async function SettingsPage() {
       <header className="flex items-center gap-4">
         <Image src="/omh.svg" alt="" width={56} height={56} />
         <div className="flex flex-col leading-tight">
-          <h1 className="text-2xl font-bold text-indigo-700">Settings</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-indigo-700">Settings</h1>
+            {player?.is_admin === true && (
+              <span className="rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-0.5">
+                Admin
+              </span>
+            )}
+          </div>
           <Link href="/" className="text-sm text-neutral-600 hover:underline">
             ← Back to scoreboard
           </Link>

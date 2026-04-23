@@ -22,7 +22,10 @@ export async function GET(request: Request): Promise<Response> {
   const unauthorized = requireCronAuth(request);
   if (unauthorized) return unauthorized;
 
-  if (getLocalHour() !== REMINDER_LOCAL_HOUR) {
+  // `?force=1` lets an authorized caller (holds CRON_SECRET) trigger the
+  // reminder outside the 8am ET window — useful for manual verification.
+  const force = new URL(request.url).searchParams.get("force") === "1";
+  if (!force && getLocalHour() !== REMINDER_LOCAL_HOUR) {
     return NextResponse.json({ ok: true, skipped: "wrong-hour" });
   }
 

@@ -12,11 +12,12 @@ import { getToday } from "@/lib/date";
 
 const CRON_SECRET = process.env.CRON_SECRET ?? "";
 
-function makeRequest(headers: Record<string, string> = {}) {
-  return new Request("http://localhost/api/cron/remind", {
-    method: "GET",
-    headers,
-  });
+function makeRequest(
+  headers: Record<string, string> = {},
+  query: string = ""
+) {
+  const url = `http://localhost/api/cron/remind${query}`;
+  return new Request(url, { method: "GET", headers });
 }
 
 // Scoped cleanup: only touch today's game + rsvps for it. Avoids wiping rows
@@ -118,6 +119,20 @@ describe("GET /api/cron/remind", () => {
     const body = await res.json();
     expect(body.skipped).toMatch(/hour/i);
     expect(mockBatch).not.toHaveBeenCalled();
+  });
+
+  it("bypasses the hour guard when ?force=1 is set", async () => {
+    // Wrong local hour (09:00 ET), but force=1 should skip the hour guard
+    // and proceed into the body. No game seeded, so it should then return
+    // the no-game-today skip — proving the hour guard was bypassed.
+    jest.setSystemTime(new Date("2026-06-15T13:00:00Z"));
+    await clearTodaysGameAndRsvps();
+    const res = await GET(
+      makeRequest({ Authorization: `Bearer ${CRON_SECRET}` }, "?force=1")
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.skipped).toBe("no-game-today");
   });
 
   it("skips when today has no game row", async () => {

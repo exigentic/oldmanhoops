@@ -37,6 +37,7 @@ describe("initial schema", () => {
       "reminder_sms",
       "active",
       "created_at",
+      "is_admin",
     ]);
   });
 

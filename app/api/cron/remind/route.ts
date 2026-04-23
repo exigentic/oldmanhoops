@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getToday, formatGameDate, getLocalHour } from "@/lib/date";
 import { env } from "@/lib/env";
 import { buildReminderEmail } from "@/lib/email/reminder";
-import { sendEmail, notifyAdmin } from "@/lib/email/send";
+import { sendEmailBatch, notifyAdmin } from "@/lib/email/send";
 import { requireCronAuth } from "@/lib/cron-auth";
 import { siteOrigin } from "@/lib/site-url";
 
@@ -77,13 +77,18 @@ export async function GET(request: Request): Promise<Response> {
     const baseUrl = siteOrigin(request);
     const gameDateText = formatGameDate(today);
     const gameId = game.id;
-    const CONCURRENCY = 2;
 
-    async function sendOne(p: PlayerRow): Promise<"sent" | "failed"> {
+    // Build one batch; Resend's batch API accepts up to 100 personalized emails
+    // per request and counts as a single rate-limit slot, so we avoid the
+    // 5 req/sec cap that previously failed most per-player sends.
+    const batch: Array<{ to: string; subject: string; html: string }> = [];
+    let failed = 0;
+    for (const p of rows) {
       const email = byId.get(p.id);
       if (!email) {
         console.error(`remind: no auth.users email for player ${p.id}`);
-        return "failed";
+        failed += 1;
+        continue;
       }
       const { subject, html } = buildReminderEmail({
         playerName: p.name,
@@ -93,26 +98,24 @@ export async function GET(request: Request): Promise<Response> {
         baseUrl,
         hmacSecret: env.HMAC_SECRET,
       });
-      const result = await sendEmail(email, subject, html);
-      if (result.error) {
-        console.error(`remind: send failed for ${email}: ${result.error}`);
-        return "failed";
-      }
-      return "sent";
+      batch.push({ to: email, subject, html });
     }
 
-    let sent = 0;
-    let failed = 0;
-    for (let i = 0; i < rows.length; i += CONCURRENCY) {
-      const chunk = rows.slice(i, i + CONCURRENCY);
-      const outcomes = await Promise.all(chunk.map(sendOne));
-      for (const o of outcomes) {
-        if (o === "sent") sent += 1;
-        else failed += 1;
-      }
+    if (batch.length === 0) {
+      return NextResponse.json({ ok: true, sent: 0, failed, total: rows.length });
     }
 
-    return NextResponse.json({ ok: true, sent, failed, total: rows.length });
+    const result = await sendEmailBatch(batch);
+    if (result.error) {
+      throw new Error(`sendEmailBatch: ${result.error}`);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      sent: result.count ?? 0,
+      failed,
+      total: rows.length,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack ?? "" : "";

@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getToday, formatGameDate } from "@/lib/date";
+import { getToday, formatGameDate, getLocalHour } from "@/lib/date";
 import { env } from "@/lib/env";
 import { buildReminderEmail } from "@/lib/email/reminder";
 import { sendEmail, notifyAdmin } from "@/lib/email/send";
 import { requireCronAuth } from "@/lib/cron-auth";
 import { siteOrigin } from "@/lib/site-url";
+
+// Cron fires at both UTC hours that can map to 08:00 local (EDT and EST).
+// This guard makes the non-matching firing a no-op.
+const REMINDER_LOCAL_HOUR = 8;
 
 interface PlayerRow {
   id: string;
@@ -17,6 +21,10 @@ interface PlayerRow {
 export async function GET(request: Request): Promise<Response> {
   const unauthorized = requireCronAuth(request);
   if (unauthorized) return unauthorized;
+
+  if (getLocalHour() !== REMINDER_LOCAL_HOUR) {
+    return NextResponse.json({ ok: true, skipped: "wrong-hour" });
+  }
 
   try {
     const admin = createAdminClient();

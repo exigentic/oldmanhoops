@@ -79,14 +79,45 @@ async function deletePlayer(userId: string) {
 
 describe("GET /api/cron/remind", () => {
   beforeEach(() => {
+    // Pin the clock to 12:00 UTC on a weekday during EDT = 08:00 local,
+    // so the reminder-hour guard passes for test bodies. The one test
+    // that exercises the guard overrides system time inline.
+    jest.useFakeTimers({
+      doNotFake: [
+        "nextTick",
+        "setImmediate",
+        "clearImmediate",
+        "setInterval",
+        "clearInterval",
+        "setTimeout",
+        "clearTimeout",
+        "queueMicrotask",
+        "performance",
+      ],
+    });
+    jest.setSystemTime(new Date("2026-06-15T12:00:00Z"));
     mockSend.mockReset();
     mockNotify.mockReset();
     mockSend.mockResolvedValue({ id: "mock-id" });
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it("rejects requests without the bearer secret", async () => {
     const res = await GET(makeRequest());
     expect(res.status).toBe(401);
+  });
+
+  it("skips when the local hour is not the reminder hour", async () => {
+    // 13:00 UTC on the same EDT day = 09:00 local, one hour past target.
+    jest.setSystemTime(new Date("2026-06-15T13:00:00Z"));
+    const res = await GET(makeRequest({ Authorization: `Bearer ${CRON_SECRET}` }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.skipped).toMatch(/hour/i);
+    expect(mockSend).not.toHaveBeenCalled();
   });
 
   it("skips when today has no game row", async () => {

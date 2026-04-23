@@ -1,4 +1,4 @@
-import { getToday, isGameDay } from "@/lib/date";
+import { getToday, isGameDay, getLocalHour } from "@/lib/date";
 
 describe("getToday", () => {
   it("returns the date in America/New_York when given a fixed UTC moment", () => {
@@ -37,5 +37,31 @@ describe("isGameDay", () => {
   it("returns false for Sunday", () => {
     // 2026-04-26 is a Sunday
     expect(isGameDay("2026-04-26", "America/New_York")).toBe(false);
+  });
+});
+
+describe("getLocalHour", () => {
+  it("returns 8 when the UTC moment is 12:00 UTC during EDT", () => {
+    // 2026-06-15 is summer (EDT = UTC-4): 12:00 UTC → 08:00 local
+    const now = new Date("2026-06-15T12:00:00Z");
+    expect(getLocalHour(now, "America/New_York")).toBe(8);
+  });
+
+  it("returns 8 when the UTC moment is 13:00 UTC during EST", () => {
+    // 2026-01-15 is winter (EST = UTC-5): 13:00 UTC → 08:00 local
+    const now = new Date("2026-01-15T13:00:00Z");
+    expect(getLocalHour(now, "America/New_York")).toBe(8);
+  });
+
+  it("returns 9 when the UTC moment is 13:00 UTC during EDT", () => {
+    // Sanity check: 13:00 UTC in EDT is 09:00 local, not 08:00
+    const now = new Date("2026-06-15T13:00:00Z");
+    expect(getLocalHour(now, "America/New_York")).toBe(9);
+  });
+
+  it("uses APP_TIMEZONE env when zone not provided", () => {
+    // APP_TIMEZONE is America/New_York in .env.local
+    const now = new Date("2026-06-15T12:00:00Z");
+    expect(getLocalHour(now)).toBe(8);
   });
 });

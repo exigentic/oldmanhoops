@@ -16,3 +16,7 @@ export function isGameDay(dateStr: string, zone: string = env.APP_TIMEZONE): boo
   // Luxon: 1 = Monday, 7 = Sunday
   return dt.weekday >= 1 && dt.weekday <= 5;
 }
+
+export function getLocalHour(now: Date = new Date(), zone: string = env.APP_TIMEZONE): number {
+  return DateTime.fromJSDate(now, { zone }).hour;
+}

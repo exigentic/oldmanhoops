@@ -28,6 +28,21 @@ export async function sendEmail(
   }
 }
 
+export async function sendEmailBatch(
+  emails: Array<{ to: string; subject: string; html: string }>
+): Promise<{ count?: number; error?: string }> {
+  if (emails.length === 0) return { count: 0 };
+  try {
+    const resend = getClient();
+    const payload = emails.map((e) => ({ from: env.EMAIL_FROM, ...e }));
+    const { error } = await resend.batch.send(payload);
+    if (error) return { error: error.message };
+    return { count: emails.length };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 export async function notifyAdmin(subject: string, body: string): Promise<void> {
   try {
     const resend = getClient();

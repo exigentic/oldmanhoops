@@ -1,8 +1,8 @@
 /** @jest-environment node */
-const mockSend = jest.fn();
+const mockBatch = jest.fn();
 const mockNotify = jest.fn();
 jest.mock("@/lib/email/send", () => ({
-  sendEmail: (...args: unknown[]) => mockSend(...args),
+  sendEmailBatch: (...args: unknown[]) => mockBatch(...args),
   notifyAdmin: (...args: unknown[]) => mockNotify(...args),
 }));
 
@@ -96,9 +96,9 @@ describe("GET /api/cron/remind", () => {
       ],
     });
     jest.setSystemTime(new Date("2026-06-15T12:00:00Z"));
-    mockSend.mockReset();
+    mockBatch.mockReset();
     mockNotify.mockReset();
-    mockSend.mockResolvedValue({ id: "mock-id" });
+    mockBatch.mockResolvedValue({ count: 0 });
   });
 
   afterEach(() => {
@@ -117,7 +117,7 @@ describe("GET /api/cron/remind", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.skipped).toMatch(/hour/i);
-    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockBatch).not.toHaveBeenCalled();
   });
 
   it("skips when today has no game row", async () => {
@@ -126,7 +126,7 @@ describe("GET /api/cron/remind", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.skipped).toBeTruthy();
-    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockBatch).not.toHaveBeenCalled();
   });
 
   it("skips when today's game is cancelled", async () => {
@@ -136,10 +136,10 @@ describe("GET /api/cron/remind", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.skipped).toMatch(/cancel/i);
-    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockBatch).not.toHaveBeenCalled();
   });
 
-  it("sends emails to opted-in active players and excludes others", async () => {
+  it("batches emails for opted-in active players and excludes others", async () => {
     // The local test DB may contain players seeded by earlier tests — assert
     // only our specific emails' presence/absence, not exact totals.
     await clearTodaysGameAndRsvps();
@@ -159,18 +159,34 @@ describe("GET /api/cron/remind", () => {
       active: false,
     });
 
+    mockBatch.mockImplementation(async (emails: Array<{ to: string }>) => ({
+      count: emails.length,
+    }));
+
     try {
       const res = await GET(makeRequest({ Authorization: `Bearer ${CRON_SECRET}` }));
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.sent).toBeGreaterThanOrEqual(2);
-      expect(mockSend).toHaveBeenCalled();
 
-      const recipients = mockSend.mock.calls.map((c: unknown[]) => c[0] as string);
+      // Exactly one batch call per cron invocation.
+      expect(mockBatch).toHaveBeenCalledTimes(1);
+      const batchArg = mockBatch.mock.calls[0][0] as Array<{
+        to: string;
+        subject: string;
+        html: string;
+      }>;
+      const recipients = batchArg.map((e) => e.to);
       expect(recipients).toContain(a.email);
       expect(recipients).toContain(b.email);
       expect(recipients).not.toContain(optedOut.email);
       expect(recipients).not.toContain(inactive.email);
+      // Each entry carries per-recipient subject + html (the HMAC-signed RSVP buttons).
+      for (const e of batchArg) {
+        expect(typeof e.subject).toBe("string");
+        expect(typeof e.html).toBe("string");
+        expect(e.html.length).toBeGreaterThan(0);
+      }
     } finally {
       await deletePlayer(a.userId);
       await deletePlayer(b.userId);
@@ -179,30 +195,22 @@ describe("GET /api/cron/remind", () => {
     }
   });
 
-  it("continues past a send failure and reports the failed count", async () => {
+  it("notifies admin and throws when the batch send errors", async () => {
     await clearTodaysGameAndRsvps();
     await seedGame("scheduled");
 
     const stamp = Date.now();
-    const a = await createPlayer({ email: `remind-fail-a-${stamp}@example.com`, name: "Alpha" });
-    const b = await createPlayer({ email: `remind-fail-b-${stamp}@example.com`, name: "Beta" });
+    const a = await createPlayer({ email: `remind-fail-${stamp}@example.com`, name: "Alpha" });
 
-    // Any send to player A fails; others succeed.
-    mockSend.mockImplementation(async (to: string) => {
-      if (to === a.email) return { error: "boom" };
-      return { id: "ok" };
-    });
+    mockBatch.mockResolvedValue({ error: "rate limited" });
 
     try {
-      const res = await GET(makeRequest({ Authorization: `Bearer ${CRON_SECRET}` }));
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.failed).toBeGreaterThanOrEqual(1);
-      expect(body.sent).toBeGreaterThanOrEqual(1);
-      expect(body.total).toBe(body.sent + body.failed);
+      await expect(
+        GET(makeRequest({ Authorization: `Bearer ${CRON_SECRET}` }))
+      ).rejects.toThrow(/rate limited/i);
+      expect(mockNotify).toHaveBeenCalledTimes(1);
     } finally {
       await deletePlayer(a.userId);
-      await deletePlayer(b.userId);
     }
   });
 });

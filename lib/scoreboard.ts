@@ -17,6 +17,7 @@ function extractJoinedName(players: unknown): string {
 export type RsvpStatus = "in" | "out" | "maybe";
 
 export interface RosterEntry {
+  playerId: string;
   name: string;
   status: RsvpStatus;
   guests: number;
@@ -36,12 +37,18 @@ export type ScoreboardData =
       state: "scheduled";
       counts: { in: number; out: number; maybe: number };
       roster: RosterEntry[] | null;
+      nonResponders: { playerId: string; name: string }[] | null;
       currentUserRsvp: CurrentRsvp | null;
     };
 
 export async function getTodayScoreboard(
   supabase: SupabaseClient,
-  opts: { today: string; includeRoster: boolean; userId?: string }
+  opts: {
+    today: string;
+    includeRoster: boolean;
+    includeNonResponders?: boolean;
+    userId?: string;
+  }
 ): Promise<ScoreboardData> {
   const { data: game, error: gameErr } = await supabase
     .from("games")
@@ -76,6 +83,7 @@ export async function getTodayScoreboard(
 
     if (opts.includeRoster) {
       roster.push({
+        playerId: r.player_id,
         name: extractJoinedName(r.players),
         status: r.status as RsvpStatus,
         guests,
@@ -92,10 +100,26 @@ export async function getTodayScoreboard(
     }
   }
 
+  let nonResponders: { playerId: string; name: string }[] | null = null;
+  if (opts.includeNonResponders) {
+    const { data: activePlayers, error: playersErr } = await supabase
+      .from("players")
+      .select("id, name")
+      .eq("active", true);
+    if (playersErr) throw playersErr;
+
+    const responderIds = new Set((rsvps ?? []).map((r) => r.player_id));
+    nonResponders = (activePlayers ?? [])
+      .filter((p) => !responderIds.has(p.id))
+      .map((p) => ({ playerId: p.id as string, name: (p.name as string) ?? "" }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   return {
     state: "scheduled",
     counts: { in: inCount, out: outCount, maybe: maybeCount },
     roster: opts.includeRoster ? roster : null,
+    nonResponders,
     currentUserRsvp,
   };
 }

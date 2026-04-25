@@ -22,6 +22,7 @@ describe("Scoreboard", () => {
       state: "scheduled",
       counts: { in: 4, out: 1, maybe: 2 },
       roster: null,
+      nonResponders: null,
       currentUserRsvp: null,
     };
     render(<Scoreboard initial={initial} />);
@@ -34,7 +35,8 @@ describe("Scoreboard", () => {
     const initial: ScoreboardData = {
       state: "scheduled",
       counts: { in: 1, out: 0, maybe: 0 },
-      roster: [{ name: "Alice", status: "in", guests: 0, note: null }],
+      roster: [{ playerId: "p-alice", name: "Alice", status: "in", guests: 0, note: null }],
+      nonResponders: null,
       currentUserRsvp: null,
     };
     render(<Scoreboard initial={initial} />);

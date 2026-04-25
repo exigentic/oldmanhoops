@@ -224,13 +224,13 @@ describe("getTodayScoreboard", () => {
         includeNonResponders: true,
       });
       expect(result.state).toBe("scheduled");
-      if (result.state === "scheduled" && result.nonResponders) {
-        const ids = result.nonResponders.map((n) => n.playerId);
-        expect(ids).toContain(nonResponder);
-        expect(ids).not.toContain(responder);
-        const noEntry = result.nonResponders.find((n) => n.playerId === nonResponder);
-        expect(noEntry?.name).toBe("No");
-      }
+      if (result.state !== "scheduled") return;
+      expect(result.nonResponders).not.toBeNull();
+      const ids = (result.nonResponders ?? []).map((n) => n.playerId);
+      expect(ids).toContain(nonResponder);
+      expect(ids).not.toContain(responder);
+      const noEntry = (result.nonResponders ?? []).find((n) => n.playerId === nonResponder);
+      expect(noEntry?.name).toBe("No");
     } finally {
       await cleanup(date);
       for (const id of [responder, nonResponder]) await admin.auth.admin.deleteUser(id);
@@ -251,10 +251,10 @@ describe("getTodayScoreboard", () => {
         includeNonResponders: true,
       });
       expect(result.state).toBe("scheduled");
-      if (result.state === "scheduled" && result.nonResponders) {
-        const ids = result.nonResponders.map((n) => n.playerId);
-        expect(ids).not.toContain(inactive);
-      }
+      if (result.state !== "scheduled") return;
+      expect(result.nonResponders).not.toBeNull();
+      const ids = (result.nonResponders ?? []).map((n) => n.playerId);
+      expect(ids).not.toContain(inactive);
     } finally {
       await cleanup(date);
       for (const id of [responder, inactive]) await admin.auth.admin.deleteUser(id);

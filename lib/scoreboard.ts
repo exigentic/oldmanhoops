@@ -17,6 +17,7 @@ function extractJoinedName(players: unknown): string {
 export type RsvpStatus = "in" | "out" | "maybe";
 
 export interface RosterEntry {
+  playerId: string;
   name: string;
   status: RsvpStatus;
   guests: number;
@@ -76,6 +77,7 @@ export async function getTodayScoreboard(
 
     if (opts.includeRoster) {
       roster.push({
+        playerId: r.player_id,
         name: extractJoinedName(r.players),
         status: r.status as RsvpStatus,
         guests,

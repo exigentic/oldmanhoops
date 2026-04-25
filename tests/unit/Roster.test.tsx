@@ -4,10 +4,10 @@ import type { RosterEntry } from "@/lib/scoreboard";
 
 describe("Roster", () => {
   const entries: RosterEntry[] = [
-    { name: "Alice", status: "in", guests: 1, note: "15 min late" },
-    { name: "Bob", status: "in", guests: 0, note: null },
-    { name: "Cat", status: "maybe", guests: 0, note: null },
-    { name: "Dave", status: "out", guests: 0, note: null },
+    { playerId: "p-alice", name: "Alice", status: "in", guests: 1, note: "15 min late" },
+    { playerId: "p-bob", name: "Bob", status: "in", guests: 0, note: null },
+    { playerId: "p-cat", name: "Cat", status: "maybe", guests: 0, note: null },
+    { playerId: "p-dave", name: "Dave", status: "out", guests: 0, note: null },
   ];
 
   it("groups entries by status", () => {

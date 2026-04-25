@@ -173,4 +173,24 @@ describe("getTodayScoreboard", () => {
       await admin.auth.admin.deleteUser(p1);
     }
   });
+
+  it("includes playerId on roster entries", async () => {
+    const date = "2099-04-08";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-pid@example.com", "PidPlayer");
+    try {
+      await seedRsvp(gameId, p1, "in");
+      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled" && result.roster) {
+        expect(result.roster).toHaveLength(1);
+        expect(result.roster[0]).toEqual(
+          expect.objectContaining({ playerId: p1, name: "PidPlayer", status: "in" })
+        );
+      }
+    } finally {
+      await cleanup(date);
+      await admin.auth.admin.deleteUser(p1);
+    }
+  });
 });

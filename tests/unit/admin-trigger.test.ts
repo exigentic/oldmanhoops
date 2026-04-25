@@ -14,6 +14,13 @@ afterAll(async () => {
   await pool.end();
 });
 
+// Postgres SET LOCAL doesn't accept parameter binding ($1), so JWT claims
+// are interpolated as a quoted SQL literal with single-quote escaping.
+function setJwtClaims(playerId: string): string {
+  const json = JSON.stringify({ sub: playerId, role: "authenticated" }).replace(/'/g, "''");
+  return `SET LOCAL "request.jwt.claims" = '${json}'`;
+}
+
 describe("players.is_admin write protection trigger", () => {
   it("blocks an authenticated user from setting is_admin = true on their own row", async () => {
     const client = await pool.connect();
@@ -27,9 +34,7 @@ describe("players.is_admin write protection trigger", () => {
         )
       ).rows[0].id;
       await client.query(`SET LOCAL ROLE authenticated`);
-      await client.query(
-        `SET LOCAL "request.jwt.claims" = '${JSON.stringify({ sub: playerId, role: "authenticated" }).replace(/'/g, "''")}'`
-      );
+      await client.query(setJwtClaims(playerId));
       await expect(
         client.query(`UPDATE public.players SET is_admin = true WHERE id = $1`, [playerId])
       ).rejects.toThrow(/is_admin/);
@@ -51,9 +56,7 @@ describe("players.is_admin write protection trigger", () => {
         )
       ).rows[0].id;
       await client.query(`SET LOCAL ROLE authenticated`);
-      await client.query(
-        `SET LOCAL "request.jwt.claims" = '${JSON.stringify({ sub: playerId, role: "authenticated" }).replace(/'/g, "''")}'`
-      );
+      await client.query(setJwtClaims(playerId));
       const res = await client.query(
         `UPDATE public.players SET name = 'Renamed' WHERE id = $1 RETURNING name`,
         [playerId]

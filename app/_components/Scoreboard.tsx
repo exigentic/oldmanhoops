@@ -13,10 +13,14 @@ export function Scoreboard({
   initial,
   urlStatus = null,
   focusNoteOnMount = false,
+  isAdmin = false,
+  currentUserId = null,
 }: {
   initial: ScoreboardData;
   urlStatus?: string | null;
   focusNoteOnMount?: boolean;
+  isAdmin?: boolean;
+  currentUserId?: string | null;
 }) {
   const [data, setData] = useState<ScoreboardData>(initial);
 
@@ -30,6 +34,22 @@ export function Scoreboard({
       // ignore transient fetch errors
     }
   }, []);
+
+  const setPlayerStatus = useCallback(
+    async (playerId: string, next: RsvpStatus) => {
+      const res = await fetch("/api/admin/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ player_id: playerId, status: next }),
+      });
+      if (!res.ok) {
+        // Throw so the row's AdminRow shows its inline error message.
+        throw new Error(`admin rsvp failed: ${res.status}`);
+      }
+      await refresh();
+    },
+    [refresh]
+  );
 
   useEffect(() => {
     function tickIfVisible() {
@@ -61,6 +81,14 @@ export function Scoreboard({
   }
 
   const isMember = data.roster !== null;
+  const adminProps =
+    isAdmin && currentUserId
+      ? { currentUserId, onSetStatus: setPlayerStatus }
+      : undefined;
+  const nonRespondersProps = isAdmin ? data.nonResponders ?? undefined : undefined;
+  const rosterIsNonEmpty = !!data.roster && data.roster.length > 0;
+  const renderRoster =
+    rosterIsNonEmpty || (!!nonRespondersProps && nonRespondersProps.length > 0);
 
   return (
     <div className="flex flex-col w-full gap-6" aria-live="polite" aria-atomic="false">
@@ -78,8 +106,12 @@ export function Scoreboard({
             focusNoteOnMount={focusNoteOnMount}
             onUpdated={refresh}
           />
-          {data.roster && data.roster.length > 0 && (
-            <Roster entries={data.roster} />
+          {renderRoster && (
+            <Roster
+              entries={data.roster ?? []}
+              admin={adminProps}
+              nonResponders={nonRespondersProps}
+            />
           )}
         </div>
       ) : (

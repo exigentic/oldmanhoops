@@ -4,6 +4,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { formatGameDate, getToday } from "@/lib/date";
 import { getTodayScoreboard } from "@/lib/scoreboard";
+import { isCurrentUserAdmin } from "@/lib/auth/admin";
 import { Scoreboard } from "@/app/_components/Scoreboard";
 import { getSiteOrigin } from "@/lib/site-url";
 
@@ -49,9 +50,11 @@ export default async function Home({
   } = await supabase.auth.getUser();
 
   const today = getToday();
+  const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
   const initial = await getTodayScoreboard(supabase, {
     today,
     includeRoster: !!user,
+    includeNonResponders: isAdmin,
     userId: user?.id,
   });
 
@@ -71,6 +74,8 @@ export default async function Home({
           initial={initial}
           urlStatus={urlStatus ?? null}
           focusNoteOnMount={!!urlStatus}
+          isAdmin={isAdmin}
+          currentUserId={user?.id ?? null}
         />
 
         {!user && (

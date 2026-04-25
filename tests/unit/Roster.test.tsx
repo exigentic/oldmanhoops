@@ -127,6 +127,23 @@ describe("Roster (admin mode)", () => {
     expect(screen.queryByRole("heading", { name: /not yet responded/i })).not.toBeInTheDocument();
   });
 
+  it("does not render admin buttons on the admin's own row in the non-responders section", () => {
+    render(
+      <Roster
+        entries={entries}
+        admin={{ currentUserId: adminId, onSetStatus: jest.fn() }}
+        nonResponders={[
+          { playerId: adminId, name: "Admin Self" },
+          { playerId: "p-cat", name: "Cat" },
+        ]}
+      />
+    );
+    // Cat (other player) gets buttons
+    expect(screen.getAllByRole("button", { name: /set Cat/i })).toHaveLength(3);
+    // Admin's own row in nonResponders does NOT get buttons
+    expect(screen.queryAllByRole("button", { name: /set Admin Self/i })).toHaveLength(0);
+  });
+
   it("renders no admin buttons when no admin prop is passed", () => {
     render(<Roster entries={entries} />);
     expect(screen.queryAllByRole("button")).toHaveLength(0);

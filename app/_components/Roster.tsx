@@ -70,6 +70,7 @@ function AdminRow({
   note,
   current,
   showButtons,
+  muted = false,
   onSetStatus,
 }: {
   playerId: string;
@@ -78,6 +79,7 @@ function AdminRow({
   note: string | null;
   current: RsvpStatus | null;
   showButtons: boolean;
+  muted?: boolean;
   onSetStatus?: (playerId: string, next: RsvpStatus) => Promise<void>;
 }) {
   const [pending, setPending] = useState(false);
@@ -99,7 +101,7 @@ function AdminRow({
   return (
     <li className="flex items-start justify-between gap-3">
       <div className="flex flex-col">
-        <span className="font-medium">
+        <span className={`font-medium${muted ? " text-neutral-700" : ""}`}>
           {name}
           {guests > 0 && <span className="text-neutral-600"> +{guests}</span>}
         </span>
@@ -184,7 +186,8 @@ export function Roster({
                 guests={0}
                 note={null}
                 current={null}
-                showButtons={true}
+                showButtons={n.playerId !== admin?.currentUserId}
+                muted
                 onSetStatus={admin?.onSetStatus}
               />
             ))}

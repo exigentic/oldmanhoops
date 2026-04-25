@@ -13,7 +13,6 @@ const HEADING_CLASS: Record<RosterEntry["status"], string> = {
 
 const STATUSES: RsvpStatus[] = ["in", "maybe", "out"];
 const STATUS_GLYPH: Record<RsvpStatus, string> = { in: "✓", maybe: "?", out: "✗" };
-const STATUS_LABEL: Record<RsvpStatus, string> = { in: "in", maybe: "maybe", out: "out" };
 const STATUS_FILLED: Record<RsvpStatus, string> = {
   in: "bg-emerald-600 text-white",
   maybe: "bg-yellow-500 text-white",
@@ -50,7 +49,7 @@ function StatusCluster({
           <button
             key={s}
             type="button"
-            aria-label={`Set ${playerName} to ${STATUS_LABEL[s]}`}
+            aria-label={`Set ${playerName} to ${s}`}
             aria-pressed={filled}
             disabled={disabled}
             onClick={() => onSelect(s)}
@@ -177,7 +176,7 @@ export function Roster({
             Not yet responded
           </h2>
           <ul className="flex flex-col gap-2 text-neutral-900">
-            {nonResponders!.map((n) => (
+            {nonResponders?.map((n) => (
               <AdminRow
                 key={n.playerId}
                 playerId={n.playerId}
@@ -186,7 +185,7 @@ export function Roster({
                 note={null}
                 current={null}
                 showButtons={true}
-                onSetStatus={admin!.onSetStatus}
+                onSetStatus={admin?.onSetStatus}
               />
             ))}
           </ul>

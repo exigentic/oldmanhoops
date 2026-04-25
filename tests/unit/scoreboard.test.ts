@@ -193,4 +193,71 @@ describe("getTodayScoreboard", () => {
       await admin.auth.admin.deleteUser(p1);
     }
   });
+
+  it("returns nonResponders = null when includeNonResponders is false", async () => {
+    const date = "2099-05-01";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-nr1@example.com", "Alice");
+    try {
+      await seedRsvp(gameId, p1, "in");
+      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled") {
+        expect(result.nonResponders).toBeNull();
+      }
+    } finally {
+      await cleanup(date);
+      await admin.auth.admin.deleteUser(p1);
+    }
+  });
+
+  it("includes active players without RSVPs when includeNonResponders is true", async () => {
+    const date = "2099-05-02";
+    const gameId = await seed(date);
+    const responder = await seedPlayer("sb-test-nr-yes@example.com", "Yes");
+    const nonResponder = await seedPlayer("sb-test-nr-no@example.com", "No");
+    try {
+      await seedRsvp(gameId, responder, "in");
+      const result = await getTodayScoreboard(admin, {
+        today: date,
+        includeRoster: true,
+        includeNonResponders: true,
+      });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled" && result.nonResponders) {
+        const ids = result.nonResponders.map((n) => n.playerId);
+        expect(ids).toContain(nonResponder);
+        expect(ids).not.toContain(responder);
+        const noEntry = result.nonResponders.find((n) => n.playerId === nonResponder);
+        expect(noEntry?.name).toBe("No");
+      }
+    } finally {
+      await cleanup(date);
+      for (const id of [responder, nonResponder]) await admin.auth.admin.deleteUser(id);
+    }
+  });
+
+  it("excludes inactive players from nonResponders", async () => {
+    const date = "2099-05-03";
+    const gameId = await seed(date);
+    const responder = await seedPlayer("sb-test-nr-r@example.com", "Active");
+    const inactive = await seedPlayer("sb-test-nr-inactive@example.com", "Inactive");
+    try {
+      await seedRsvp(gameId, responder, "in");
+      await pool.query(`UPDATE players SET active = false WHERE id = $1`, [inactive]);
+      const result = await getTodayScoreboard(admin, {
+        today: date,
+        includeRoster: true,
+        includeNonResponders: true,
+      });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled" && result.nonResponders) {
+        const ids = result.nonResponders.map((n) => n.playerId);
+        expect(ids).not.toContain(inactive);
+      }
+    } finally {
+      await cleanup(date);
+      for (const id of [responder, inactive]) await admin.auth.admin.deleteUser(id);
+    }
+  });
 });

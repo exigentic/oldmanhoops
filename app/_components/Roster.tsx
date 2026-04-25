@@ -26,8 +26,8 @@ export function Roster({ entries }: { entries: RosterEntry[] }) {
               {LABEL[status]}
             </h2>
             <ul className="flex flex-col gap-2 text-neutral-900">
-              {grouped[status].map((e, i) => (
-                <li key={`${e.name}-${i}`} className="flex flex-col">
+              {grouped[status].map((e) => (
+                <li key={e.playerId} className="flex flex-col">
                   <span className="font-medium">
                     {e.name}
                     {e.guests > 0 && <span className="text-neutral-600"> +{e.guests}</span>}

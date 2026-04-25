@@ -104,19 +104,29 @@ describe("POST /api/admin/rsvp", () => {
     expect(res.status).toBe(400);
   });
 
+  it("returns 400 for invalid JSON body", async () => {
+    mockSession("user-1");
+    mockIsAdmin(true);
+    const res = await POST(
+      new Request("http://localhost/api/admin/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "not json",
+      })
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("returns 404 when no game exists today", async () => {
     mockSession("user-1");
     mockIsAdmin(true);
     const today = getToday();
     await pool.query(`DELETE FROM rsvps WHERE game_id IN (SELECT id FROM games WHERE game_date = $1)`, [today]);
     await pool.query(`DELETE FROM games WHERE game_date = $1`, [today]);
-    const target = await seedPlayer(`admin-rsvp-404-${Date.now()}@example.com`);
-    try {
-      const res = await POST(makeRequest({ player_id: target, status: "in" }));
-      expect(res.status).toBe(404);
-    } finally {
-      await admin.auth.admin.deleteUser(target);
-    }
+    const res = await POST(
+      makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in" })
+    );
+    expect(res.status).toBe(404);
   });
 
   it("returns 403 when today's game is cancelled", async () => {
@@ -126,13 +136,13 @@ describe("POST /api/admin/rsvp", () => {
     await pool.query(`DELETE FROM rsvps WHERE game_id IN (SELECT id FROM games WHERE game_date = $1)`, [today]);
     await pool.query(`DELETE FROM games WHERE game_date = $1`, [today]);
     await pool.query(`INSERT INTO games (game_date, status) VALUES ($1, 'cancelled')`, [today]);
-    const target = await seedPlayer(`admin-rsvp-cancelled-${Date.now()}@example.com`);
     try {
-      const res = await POST(makeRequest({ player_id: target, status: "in" }));
+      const res = await POST(
+        makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in" })
+      );
       expect(res.status).toBe(403);
     } finally {
       await pool.query(`DELETE FROM games WHERE game_date = $1`, [today]);
-      await admin.auth.admin.deleteUser(target);
     }
   });
 

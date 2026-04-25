@@ -17,8 +17,9 @@ export async function POST(request: Request): Promise<Response> {
   const supabase = await createClient();
   const {
     data: { user },
+    error: authErr,
   } = await supabase.auth.getUser();
-  if (!user) {
+  if (authErr || !user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 

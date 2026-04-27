@@ -100,6 +100,10 @@ export async function getTodayScoreboard(
     }
   }
 
+  if (opts.includeRoster) {
+    roster.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   let nonResponders: { playerId: string; name: string }[] | null = null;
   if (opts.includeNonResponders) {
     const { data: activePlayers, error: playersErr } = await supabase

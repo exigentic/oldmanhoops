@@ -170,7 +170,10 @@ export function Roster({
       )}
 
       {hasNonResponders && (
-        <section aria-labelledby="roster-not-yet-responded">
+        <section
+          aria-labelledby="roster-not-yet-responded"
+          className={hasGroups ? "mt-2 pt-4 border-t border-neutral-200" : undefined}
+        >
           <h2
             id="roster-not-yet-responded"
             className="text-sm font-semibold uppercase tracking-wide mb-2 text-neutral-500"

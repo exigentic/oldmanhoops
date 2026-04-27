@@ -1,7 +1,16 @@
 /** @jest-environment node */
 import { Pool } from "pg";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getTodayScoreboard } from "@/lib/scoreboard";
+
+function createAnonClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 const CONN = process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:55322/postgres";
 
@@ -89,6 +98,26 @@ describe("getTodayScoreboard", () => {
     } finally {
       await cleanup(date);
       for (const id of [p1, p2, p3]) await admin.auth.admin.deleteUser(id);
+    }
+  });
+
+  it("returns counts for anon (logged-out) callers — RLS on players must not zero them out", async () => {
+    const date = "2099-04-09";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-anon-p1@example.com", "Alice");
+    const p2 = await seedPlayer("sb-test-anon-p2@example.com", "Bob");
+    try {
+      await seedRsvp(gameId, p1, "in", 2);
+      await seedRsvp(gameId, p2, "out");
+      const anon = createAnonClient();
+      const result = await getTodayScoreboard(anon, { today: date, includeRoster: false });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled") {
+        expect(result.counts).toEqual({ in: 3, out: 1, maybe: 0 });
+      }
+    } finally {
+      await cleanup(date);
+      for (const id of [p1, p2]) await admin.auth.admin.deleteUser(id);
     }
   });
 

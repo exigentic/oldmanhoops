@@ -62,10 +62,17 @@ export async function getTodayScoreboard(
     return { state: "cancelled", reason: game.status_reason ?? null };
   }
 
-  const { data: rsvps, error: rsvpErr } = await supabase
-    .from("rsvps")
-    .select("player_id, status, guests, note, players!inner(name)")
-    .eq("game_id", game.id);
+  // Only join `players` when we need names. The `players` table is gated by
+  // RLS to authenticated users, so an inner join would zero out anon counts.
+  const { data: rsvps, error: rsvpErr } = opts.includeRoster
+    ? await supabase
+        .from("rsvps")
+        .select("player_id, status, guests, note, players!inner(name)")
+        .eq("game_id", game.id)
+    : await supabase
+        .from("rsvps")
+        .select("player_id, status, guests, note")
+        .eq("game_id", game.id);
 
   if (rsvpErr) throw rsvpErr;
 
@@ -84,7 +91,7 @@ export async function getTodayScoreboard(
     if (opts.includeRoster) {
       roster.push({
         playerId: r.player_id,
-        name: extractJoinedName(r.players),
+        name: extractJoinedName((r as unknown as { players: unknown }).players),
         status: r.status as RsvpStatus,
         guests,
         note: r.note ?? null,

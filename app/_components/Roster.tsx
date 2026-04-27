@@ -139,35 +139,38 @@ export function Roster({
 
   const grouped: Record<RosterEntry["status"], RosterEntry[]> = { in: [], maybe: [], out: [] };
   for (const e of entries) grouped[e.status].push(e);
+  const visibleStatuses = ORDER.filter((s) => grouped[s].length > 0);
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {ORDER.map((status) =>
-        grouped[status].length === 0 ? null : (
-          <section key={status} aria-labelledby={`roster-${status}`}>
-            <h2
-              id={`roster-${status}`}
-              className={`text-sm font-semibold uppercase tracking-wide mb-2 ${HEADING_CLASS[status]}`}
-            >
-              {LABEL[status]}
-            </h2>
-            <ul className="flex flex-col gap-2 text-neutral-900">
-              {grouped[status].map((e) => (
-                <AdminRow
-                  key={e.playerId}
-                  playerId={e.playerId}
-                  name={e.name}
-                  guests={e.guests}
-                  note={e.note}
-                  current={e.status}
-                  showButtons={!!admin && e.playerId !== admin.currentUserId}
-                  onSetStatus={admin?.onSetStatus}
-                />
-              ))}
-            </ul>
-          </section>
-        )
-      )}
+      {visibleStatuses.map((status, index) => (
+        <section
+          key={status}
+          aria-labelledby={`roster-${status}`}
+          className={index > 0 ? "mt-2 pt-4 border-t border-neutral-200" : undefined}
+        >
+          <h2
+            id={`roster-${status}`}
+            className={`text-sm font-semibold uppercase tracking-wide mb-2 ${HEADING_CLASS[status]}`}
+          >
+            {LABEL[status]}
+          </h2>
+          <ul className="flex flex-col gap-2 text-neutral-900">
+            {grouped[status].map((e) => (
+              <AdminRow
+                key={e.playerId}
+                playerId={e.playerId}
+                name={e.name}
+                guests={e.guests}
+                note={e.note}
+                current={e.status}
+                showButtons={!!admin && e.playerId !== admin.currentUserId}
+                onSetStatus={admin?.onSetStatus}
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
 
       {hasNonResponders && (
         <section

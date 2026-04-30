@@ -2,7 +2,7 @@
 import { Pool } from "pg";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getTodayScoreboard } from "@/lib/scoreboard";
+import { getScoreboard } from "@/lib/scoreboard";
 
 function createAnonClient() {
   return createSupabaseClient(
@@ -59,11 +59,11 @@ async function seedRsvp(gameId: string, playerId: string, status: "in" | "out" |
   );
 }
 
-describe("getTodayScoreboard", () => {
+describe("getScoreboard", () => {
   it("returns state 'no-game' when no game row exists for today", async () => {
     const date = "2099-04-01";
     await cleanup(date);
-    const result = await getTodayScoreboard(admin, { today: date, includeRoster: false });
+    const result = await getScoreboard(admin, { date, includeRoster: false });
     expect(result).toEqual({ state: "no-game" });
   });
 
@@ -71,7 +71,7 @@ describe("getTodayScoreboard", () => {
     const date = "2099-04-02";
     await seed(date, "cancelled", "Gym closed");
     try {
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: false });
+      const result = await getScoreboard(admin, { date, includeRoster: false });
       expect(result).toEqual({ state: "cancelled", reason: "Gym closed" });
     } finally {
       await cleanup(date);
@@ -88,7 +88,7 @@ describe("getTodayScoreboard", () => {
       await seedRsvp(gameId, p1, "in", 2);      // 1 + 2 = 3 bodies in
       await seedRsvp(gameId, p2, "maybe", 1);   // 1 + 1 = 2 bodies maybe
       await seedRsvp(gameId, p3, "out", 5);     // 1 player out (guests ignored)
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: false });
+      const result = await getScoreboard(admin, { date, includeRoster: false });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled") {
         expect(result.counts).toEqual({ in: 3, out: 1, maybe: 2 });
@@ -110,7 +110,7 @@ describe("getTodayScoreboard", () => {
       await seedRsvp(gameId, p1, "in", 2);
       await seedRsvp(gameId, p2, "out");
       const anon = createAnonClient();
-      const result = await getTodayScoreboard(anon, { today: date, includeRoster: false });
+      const result = await getScoreboard(anon, { date, includeRoster: false });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled") {
         expect(result.counts).toEqual({ in: 3, out: 1, maybe: 0 });
@@ -129,7 +129,7 @@ describe("getTodayScoreboard", () => {
     try {
       await seedRsvp(gameId, p1, "in", 1, "bringing a friend");
       await seedRsvp(gameId, p2, "out");
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true });
+      const result = await getScoreboard(admin, { date, includeRoster: true });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled" && result.roster) {
         expect(result.roster).toHaveLength(2);
@@ -153,7 +153,7 @@ describe("getTodayScoreboard", () => {
     const p1 = await seedPlayer("sb-test-cur1@example.com", "Alice");
     try {
       await seedRsvp(gameId, p1, "in", 1, "running late");
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true, userId: p1 });
+      const result = await getScoreboard(admin, { date, includeRoster: true, userId: p1 });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled") {
         expect(result.currentUserRsvp).toEqual({ status: "in", guests: 1, note: "running late" });
@@ -172,7 +172,7 @@ describe("getTodayScoreboard", () => {
       await seedRsvp(gameId, p1, "in"); // seed one so rsvps query returns rows (but not for our user)
       const p2 = await seedPlayer("sb-test-cur3@example.com", "Cat");
       try {
-        const result = await getTodayScoreboard(admin, { today: date, includeRoster: true, userId: p2 });
+        const result = await getScoreboard(admin, { date, includeRoster: true, userId: p2 });
         expect(result.state).toBe("scheduled");
         if (result.state === "scheduled") {
           expect(result.currentUserRsvp).toBeNull();
@@ -192,7 +192,7 @@ describe("getTodayScoreboard", () => {
     const p1 = await seedPlayer("sb-test-cur4@example.com", "Dave");
     try {
       await seedRsvp(gameId, p1, "maybe");
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: false });
+      const result = await getScoreboard(admin, { date, includeRoster: false });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled") {
         expect(result.currentUserRsvp).toBeNull();
@@ -209,7 +209,7 @@ describe("getTodayScoreboard", () => {
     const p1 = await seedPlayer("sb-test-pid@example.com", "PidPlayer");
     try {
       await seedRsvp(gameId, p1, "in");
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true });
+      const result = await getScoreboard(admin, { date, includeRoster: true });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled" && result.roster) {
         expect(result.roster).toHaveLength(1);
@@ -229,7 +229,7 @@ describe("getTodayScoreboard", () => {
     const p1 = await seedPlayer("sb-test-nr1@example.com", "Alice");
     try {
       await seedRsvp(gameId, p1, "in");
-      const result = await getTodayScoreboard(admin, { today: date, includeRoster: true });
+      const result = await getScoreboard(admin, { date, includeRoster: true });
       expect(result.state).toBe("scheduled");
       if (result.state === "scheduled") {
         expect(result.nonResponders).toBeNull();
@@ -247,8 +247,8 @@ describe("getTodayScoreboard", () => {
     const nonResponder = await seedPlayer("sb-test-nr-no@example.com", "No");
     try {
       await seedRsvp(gameId, responder, "in");
-      const result = await getTodayScoreboard(admin, {
-        today: date,
+      const result = await getScoreboard(admin, {
+        date,
         includeRoster: true,
         includeNonResponders: true,
       });
@@ -274,8 +274,8 @@ describe("getTodayScoreboard", () => {
     try {
       await seedRsvp(gameId, responder, "in");
       await pool.query(`UPDATE players SET active = false WHERE id = $1`, [inactive]);
-      const result = await getTodayScoreboard(admin, {
-        today: date,
+      const result = await getScoreboard(admin, {
+        date,
         includeRoster: true,
         includeNonResponders: true,
       });

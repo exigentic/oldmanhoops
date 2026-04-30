@@ -41,10 +41,10 @@ export type ScoreboardData =
       currentUserRsvp: CurrentRsvp | null;
     };
 
-export async function getTodayScoreboard(
+export async function getScoreboard(
   supabase: SupabaseClient,
   opts: {
-    today: string;
+    date: string;
     includeRoster: boolean;
     includeNonResponders?: boolean;
     userId?: string;
@@ -53,7 +53,7 @@ export async function getTodayScoreboard(
   const { data: game, error: gameErr } = await supabase
     .from("games")
     .select("id, status, status_reason")
-    .eq("game_date", opts.today)
+    .eq("game_date", opts.date)
     .maybeSingle();
 
   if (gameErr) throw gameErr;

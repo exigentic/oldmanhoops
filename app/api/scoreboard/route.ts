@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getToday } from "@/lib/date";
-import { getTodayScoreboard } from "@/lib/scoreboard";
+import { getScoreboard } from "@/lib/scoreboard";
 import { isCurrentUserAdmin } from "@/lib/auth/admin";
 
 export async function GET(): Promise<Response> {
@@ -12,8 +12,8 @@ export async function GET(): Promise<Response> {
 
   const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
 
-  const data = await getTodayScoreboard(supabase, {
-    today: getToday(),
+  const data = await getScoreboard(supabase, {
+    date: getToday(),
     includeRoster: !!user,
     includeNonResponders: isAdmin,
     userId: user?.id,

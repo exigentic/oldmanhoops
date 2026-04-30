@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { formatGameDate, getToday } from "@/lib/date";
-import { getTodayScoreboard } from "@/lib/scoreboard";
+import { getScoreboard } from "@/lib/scoreboard";
 import { isCurrentUserAdmin } from "@/lib/auth/admin";
 import { Scoreboard } from "@/app/_components/Scoreboard";
 import { getSiteOrigin } from "@/lib/site-url";
@@ -51,8 +51,8 @@ export default async function Home({
 
   const today = getToday();
   const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
-  const initial = await getTodayScoreboard(supabase, {
-    today,
+  const initial = await getScoreboard(supabase, {
+    date: today,
     includeRoster: !!user,
     includeNonResponders: isAdmin,
     userId: user?.id,

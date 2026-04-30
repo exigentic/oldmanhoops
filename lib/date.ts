@@ -20,3 +20,10 @@ export function isGameDay(dateStr: string, zone: string = env.APP_TIMEZONE): boo
 export function getLocalHour(now: Date = new Date(), zone: string = env.APP_TIMEZONE): number {
   return DateTime.fromJSDate(now, { zone }).hour;
 }
+
+export function isValidGameDate(dateStr: string, zone: string = env.APP_TIMEZONE): boolean {
+  if (typeof dateStr !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const dt = DateTime.fromFormat(dateStr, "yyyy-MM-dd", { zone });
+  return dt.isValid && dt.toFormat("yyyy-MM-dd") === dateStr;
+}

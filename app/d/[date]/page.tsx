@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import { formatGameDate, getToday } from "@/lib/date";
+import { formatGameDate, getToday, isValidGameDate } from "@/lib/date";
 import { getScoreboard } from "@/lib/scoreboard";
 import { isCurrentUserAdmin } from "@/lib/auth/admin";
 import { Scoreboard } from "@/app/_components/Scoreboard";
@@ -10,24 +10,26 @@ import { getSiteOrigin } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const today = getToday();
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ date: string }>;
+}): Promise<Metadata> {
+  const { date } = await params;
   const origin = getSiteOrigin();
-
   const base: Metadata = {
     title: "Old Man Hoops",
     description: "Daily pickup basketball RSVP",
   };
+  if (!origin || !isValidGameDate(date)) return base;
 
-  if (!origin) return base;
-
-  const ogUrl = `${origin}/og/${today}`;
+  const ogUrl = `${origin}/og/${date}`;
   return {
     ...base,
     openGraph: {
       title: "Old Man Hoops",
       description: "Daily pickup basketball RSVP",
-      images: [{ url: ogUrl, width: 1200, height: 630, alt: "Old Man Hoops — today's RSVP counts" }],
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: "Old Man Hoops — RSVP counts" }],
     },
     twitter: {
       card: "summary_large_image",
@@ -38,21 +40,24 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home({
-  searchParams,
+export default async function HistoricalScoreboard({
+  params,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  params: Promise<{ date: string }>;
 }) {
-  const { status: urlStatus } = await searchParams;
+  const { date } = await params;
+  if (!isValidGameDate(date)) notFound();
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const today = getToday();
   const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
+  const today = getToday();
+  const isLive = isAdmin || date >= today;
+
   const initial = await getScoreboard(supabase, {
-    date: today,
+    date,
     includeRoster: !!user,
     includeNonResponders: isAdmin,
     userId: user?.id,
@@ -65,50 +70,18 @@ export default async function Home({
         <div className="flex flex-col leading-tight">
           <h1 className="text-2xl font-bold text-indigo-700">Old Man Hoops</h1>
           <p className="text-sm text-neutral-600">M-F, Noon @ One Athletics</p>
-          <p className="text-sm text-neutral-600 mt-0.5">{formatGameDate(today)}</p>
+          <p className="text-sm text-neutral-600 mt-0.5">{formatGameDate(date)}</p>
         </div>
       </header>
 
       <div className="w-full max-w-lg flex flex-col items-center gap-6">
         <Scoreboard
           initial={initial}
-          viewDate={today}
-          isLive={true}
-          urlStatus={urlStatus ?? null}
-          focusNoteOnMount={!!urlStatus}
+          viewDate={date}
+          isLive={isLive}
           isAdmin={isAdmin}
           currentUserId={user?.id ?? null}
         />
-
-        {!user && (
-          <div className="flex items-center gap-3">
-            <Link
-              href="/join"
-              className="rounded-md bg-indigo-600 text-white px-4 py-2 font-semibold hover:bg-indigo-700"
-            >
-              Sign Up to Play
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-md border border-indigo-600 bg-white text-indigo-700 px-4 py-2 font-semibold hover:bg-indigo-50"
-            >
-              Log in
-            </Link>
-          </div>
-        )}
-
-        {user && (
-          <div className="flex items-center gap-4 text-sm text-neutral-600">
-            <Link href="/settings" className="hover:underline">
-              Manage Settings
-            </Link>
-            <form action="/api/auth/logout" method="post">
-              <button type="submit" className="hover:underline">
-                Log out
-              </button>
-            </form>
-          </div>
-        )}
       </div>
     </main>
   );

@@ -7,11 +7,13 @@ import { CountCards } from "./CountCards";
 export function RsvpControls({
   counts,
   current,
+  viewDate,
   focusNoteOnMount = false,
   onUpdated,
 }: {
   counts: { in: number; out: number; maybe: number };
   current: CurrentRsvp | null;
+  viewDate: string;
   focusNoteOnMount?: boolean;
   onUpdated?: () => void;
 }) {
@@ -37,6 +39,7 @@ export function RsvpControls({
       status: next.status ?? status,
       guests: next.guests ?? guests,
       note: (next.note ?? note) || null,
+      game_date: viewDate,
     };
     if (!body.status) return false;
 

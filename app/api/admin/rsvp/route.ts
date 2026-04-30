@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCurrentUserAdmin } from "@/lib/auth/admin";
-import { getToday } from "@/lib/date";
+import { isValidGameDate } from "@/lib/date";
 
 const VALID_STATUSES = new Set(["in", "out", "maybe"]);
 const UUID_RE =
@@ -11,6 +11,7 @@ const UUID_RE =
 interface PostBody {
   player_id?: string;
   status?: string;
+  game_date?: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -37,12 +38,15 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "body must be a JSON object" }, { status: 400 });
   }
   const body = raw as PostBody;
-  const { player_id, status } = body;
+  const { player_id, status, game_date } = body;
   if (!player_id || typeof player_id !== "string" || !UUID_RE.test(player_id)) {
     return NextResponse.json({ error: "player_id must be a uuid" }, { status: 400 });
   }
   if (!status || !VALID_STATUSES.has(status)) {
     return NextResponse.json({ error: "status must be in|out|maybe" }, { status: 400 });
+  }
+  if (!game_date || typeof game_date !== "string" || !isValidGameDate(game_date)) {
+    return NextResponse.json({ error: "game_date must be YYYY-MM-DD" }, { status: 400 });
   }
 
   const adminClient = createAdminClient();
@@ -50,13 +54,13 @@ export async function POST(request: Request): Promise<Response> {
   const { data: game, error: gameErr } = await adminClient
     .from("games")
     .select("id, status")
-    .eq("game_date", getToday())
+    .eq("game_date", game_date)
     .maybeSingle();
   if (gameErr) {
     return NextResponse.json({ error: gameErr.message }, { status: 500 });
   }
   if (!game) {
-    return NextResponse.json({ error: "No game today" }, { status: 404 });
+    return NextResponse.json({ error: "No game on that date" }, { status: 404 });
   }
   if (game.status === "cancelled") {
     return NextResponse.json({ error: "Game cancelled" }, { status: 403 });

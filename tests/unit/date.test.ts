@@ -1,4 +1,5 @@
-import { getToday, isGameDay, getLocalHour } from "@/lib/date";
+/** @jest-environment node */
+import { getToday, isGameDay, getLocalHour, isValidGameDate } from "@/lib/date";
 
 describe("getToday", () => {
   it("returns the date in America/New_York when given a fixed UTC moment", () => {
@@ -63,5 +64,27 @@ describe("getLocalHour", () => {
     // APP_TIMEZONE is America/New_York in .env.local
     const now = new Date("2026-06-15T12:00:00Z");
     expect(getLocalHour(now)).toBe(8);
+  });
+});
+
+describe("isValidGameDate", () => {
+  it("accepts a valid YYYY-MM-DD", () => {
+    expect(isValidGameDate("2026-04-30")).toBe(true);
+  });
+
+  it("rejects malformed strings", () => {
+    expect(isValidGameDate("foo")).toBe(false);
+    expect(isValidGameDate("")).toBe(false);
+    expect(isValidGameDate("2026-4-30")).toBe(false);
+  });
+
+  it("rejects out-of-range months/days", () => {
+    expect(isValidGameDate("2026-13-01")).toBe(false);
+    expect(isValidGameDate("2026-02-30")).toBe(false);
+    expect(isValidGameDate("2026-00-15")).toBe(false);
+  });
+
+  it("rejects extra characters", () => {
+    expect(isValidGameDate("2026-04-30T00:00:00")).toBe(false);
   });
 });

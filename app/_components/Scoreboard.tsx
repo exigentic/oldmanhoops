@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { ScoreboardData, RsvpStatus } from "@/lib/scoreboard";
+import { formatGameDate } from "@/lib/date";
 import { CountCards } from "./CountCards";
 import { Roster } from "./Roster";
 import { RsvpControls } from "./RsvpControls";
@@ -11,12 +12,16 @@ const POLL_MS = 30_000;
 
 export function Scoreboard({
   initial,
+  viewDate,
+  isLive,
   urlStatus = null,
   focusNoteOnMount = false,
   isAdmin = false,
   currentUserId = null,
 }: {
   initial: ScoreboardData;
+  viewDate: string;
+  isLive: boolean;
   urlStatus?: string | null;
   focusNoteOnMount?: boolean;
   isAdmin?: boolean;
@@ -26,32 +31,32 @@ export function Scoreboard({
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/scoreboard", { cache: "no-store" });
+      const res = await fetch(`/api/scoreboard?date=${viewDate}`, { cache: "no-store" });
       if (!res.ok) return;
       const next = (await res.json()) as ScoreboardData;
       setData(next);
     } catch {
       // ignore transient fetch errors
     }
-  }, []);
+  }, [viewDate]);
 
   const setPlayerStatus = useCallback(
     async (playerId: string, next: RsvpStatus) => {
       const res = await fetch("/api/admin/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ player_id: playerId, status: next }),
+        body: JSON.stringify({ player_id: playerId, status: next, game_date: viewDate }),
       });
       if (!res.ok) {
-        // Throw so the row's AdminRow shows its inline error message.
         throw new Error(`admin rsvp failed: ${res.status}`);
       }
       await refresh();
     },
-    [refresh]
+    [refresh, viewDate]
   );
 
   useEffect(() => {
+    if (!isLive) return;
     function tickIfVisible() {
       if (document.visibilityState === "visible") refresh();
     }
@@ -61,12 +66,12 @@ export function Scoreboard({
       clearInterval(id);
       document.removeEventListener("visibilitychange", tickIfVisible);
     };
-  }, [refresh]);
+  }, [refresh, isLive]);
 
   if (data.state === "no-game") {
     return (
       <div className="text-center text-neutral-600">
-        <p className="text-lg">No game today.</p>
+        <p className="text-lg">No game on {formatGameDate(viewDate)}.</p>
       </div>
     );
   }
@@ -74,7 +79,9 @@ export function Scoreboard({
   if (data.state === "cancelled") {
     return (
       <div className="text-center">
-        <p className="text-lg text-red-700 font-semibold">Game cancelled</p>
+        <p className="text-lg text-red-700 font-semibold">
+          Game cancelled — {formatGameDate(viewDate)}
+        </p>
         {data.reason && <p className="text-sm text-neutral-600 mt-1">{data.reason}</p>}
       </div>
     );
@@ -92,7 +99,7 @@ export function Scoreboard({
 
   return (
     <div className="flex flex-col w-full gap-6" aria-live="polite" aria-atomic="false">
-      {isMember && (
+      {isMember && isLive && (
         <ConfirmationBanner
           urlStatus={urlStatus}
           actualStatus={(data.currentUserRsvp?.status as RsvpStatus) ?? null}
@@ -100,12 +107,17 @@ export function Scoreboard({
       )}
       {isMember ? (
         <div className="flex flex-col gap-6">
-          <RsvpControls
-            counts={data.counts}
-            current={data.currentUserRsvp}
-            focusNoteOnMount={focusNoteOnMount}
-            onUpdated={refresh}
-          />
+          {isLive ? (
+            <RsvpControls
+              counts={data.counts}
+              current={data.currentUserRsvp}
+              viewDate={viewDate}
+              focusNoteOnMount={focusNoteOnMount}
+              onUpdated={refresh}
+            />
+          ) : (
+            <CountCards counts={data.counts} />
+          )}
           {renderRoster && (
             <Roster
               entries={data.roster ?? []}

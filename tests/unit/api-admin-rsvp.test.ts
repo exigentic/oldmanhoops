@@ -124,7 +124,7 @@ describe("POST /api/admin/rsvp", () => {
     await pool.query(`DELETE FROM rsvps WHERE game_id IN (SELECT id FROM games WHERE game_date = $1)`, [today]);
     await pool.query(`DELETE FROM games WHERE game_date = $1`, [today]);
     const res = await POST(
-      makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in" })
+      makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in", game_date: today })
     );
     expect(res.status).toBe(404);
   });
@@ -138,7 +138,7 @@ describe("POST /api/admin/rsvp", () => {
     await pool.query(`INSERT INTO games (game_date, status) VALUES ($1, 'cancelled')`, [today]);
     try {
       const res = await POST(
-        makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in" })
+        makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in", game_date: today })
       );
       expect(res.status).toBe(403);
     } finally {
@@ -153,7 +153,7 @@ describe("POST /api/admin/rsvp", () => {
     await seedGame(today);
     const target = await seedPlayer(`admin-rsvp-insert-${Date.now()}@example.com`);
     try {
-      const res = await POST(makeRequest({ player_id: target, status: "in" }));
+      const res = await POST(makeRequest({ player_id: target, status: "in", game_date: today }));
       expect(res.status).toBe(200);
       const row = await pool.query(
         `SELECT status, guests, note FROM rsvps WHERE player_id = $1`,
@@ -178,7 +178,7 @@ describe("POST /api/admin/rsvp", () => {
         `INSERT INTO rsvps (game_id, player_id, status, guests, note) VALUES ($1, $2, 'in', 2, 'bringing nephew')`,
         [gameId, target]
       );
-      const res = await POST(makeRequest({ player_id: target, status: "out" }));
+      const res = await POST(makeRequest({ player_id: target, status: "out", game_date: today }));
       expect(res.status).toBe(200);
       const row = await pool.query(
         `SELECT status, guests, note FROM rsvps WHERE player_id = $1`,
@@ -190,5 +190,54 @@ describe("POST /api/admin/rsvp", () => {
       await pool.query(`DELETE FROM games WHERE game_date = $1`, [today]);
       await admin.auth.admin.deleteUser(target);
     }
+  });
+
+  it("returns 400 when game_date is missing", async () => {
+    mockSession("user-1");
+    mockIsAdmin(true);
+    const res = await POST(makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in" }));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when game_date is malformed", async () => {
+    mockSession("user-1");
+    mockIsAdmin(true);
+    const res = await POST(
+      makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in", game_date: "not-a-date" })
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("admin can update RSVP on a non-today date", async () => {
+    mockSession("user-1");
+    mockIsAdmin(true);
+    const past = "2099-12-30";
+    const gameId = await seedGame(past);
+    const target = await seedPlayer(`admin-rsvp-pastdate-${Date.now()}@example.com`);
+    try {
+      const res = await POST(makeRequest({ player_id: target, status: "in", game_date: past }));
+      expect(res.status).toBe(200);
+      const row = await pool.query(
+        `SELECT status FROM rsvps WHERE player_id = $1 AND game_id = $2`,
+        [target, gameId]
+      );
+      expect(row.rows[0]).toMatchObject({ status: "in" });
+    } finally {
+      await pool.query(`DELETE FROM rsvps WHERE player_id = $1`, [target]);
+      await pool.query(`DELETE FROM games WHERE game_date = $1`, [past]);
+      await admin.auth.admin.deleteUser(target);
+    }
+  });
+
+  it("returns 404 when no game exists for the given date", async () => {
+    mockSession("user-1");
+    mockIsAdmin(true);
+    const date = "2099-12-31";
+    await pool.query(`DELETE FROM rsvps WHERE game_id IN (SELECT id FROM games WHERE game_date = $1)`, [date]);
+    await pool.query(`DELETE FROM games WHERE game_date = $1`, [date]);
+    const res = await POST(
+      makeRequest({ player_id: "00000000-0000-0000-0000-000000000000", status: "in", game_date: date })
+    );
+    expect(res.status).toBe(404);
   });
 });

@@ -2,18 +2,20 @@ import { render, screen } from "@testing-library/react";
 import { Scoreboard } from "@/app/_components/Scoreboard";
 import type { ScoreboardData } from "@/lib/scoreboard";
 
+const VIEW_DATE = "2026-04-30";
+
 describe("Scoreboard", () => {
   afterEach(() => {
     (global.fetch as jest.Mock | undefined)?.mockReset?.();
   });
 
-  it("renders 'No game today' for no-game state", () => {
-    render(<Scoreboard initial={{ state: "no-game" }} />);
-    expect(screen.getByText(/no game today/i)).toBeInTheDocument();
+  it("renders 'No game on ...' for no-game state", () => {
+    render(<Scoreboard initial={{ state: "no-game" }} viewDate={VIEW_DATE} isLive={false} />);
+    expect(screen.getByText(/no game on/i)).toBeInTheDocument();
   });
 
   it("renders the cancellation reason for cancelled state", () => {
-    render(<Scoreboard initial={{ state: "cancelled", reason: "Gym closed" }} />);
+    render(<Scoreboard initial={{ state: "cancelled", reason: "Gym closed" }} viewDate={VIEW_DATE} isLive={false} />);
     expect(screen.getByText(/gym closed/i)).toBeInTheDocument();
   });
 
@@ -25,7 +27,7 @@ describe("Scoreboard", () => {
       nonResponders: null,
       currentUserRsvp: null,
     };
-    render(<Scoreboard initial={initial} />);
+    render(<Scoreboard initial={initial} viewDate={VIEW_DATE} isLive={false} />);
     expect(screen.getByLabelText(/in count/i)).toHaveTextContent("4");
     // No roster means no headings
     expect(screen.queryByRole("heading", { name: /^in/i })).not.toBeInTheDocument();
@@ -39,7 +41,7 @@ describe("Scoreboard", () => {
       nonResponders: null,
       currentUserRsvp: null,
     };
-    render(<Scoreboard initial={initial} />);
+    render(<Scoreboard initial={initial} viewDate={VIEW_DATE} isLive={false} />);
     expect(screen.getByLabelText(/in count/i)).toHaveTextContent("1");
     expect(screen.getByText(/alice/i)).toBeInTheDocument();
   });

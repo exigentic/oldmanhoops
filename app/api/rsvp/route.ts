@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getToday } from "@/lib/date";
+import { getToday, isValidGameDate } from "@/lib/date";
 import { verifyToken } from "@/lib/hmac";
 import { env } from "@/lib/env";
+import { isCurrentUserAdmin } from "@/lib/auth/admin";
 
 const VALID_STATUSES = new Set(["in", "out", "maybe"]);
 
@@ -11,6 +12,7 @@ interface PostBody {
   status?: string;
   guests?: number;
   note?: string | null;
+  game_date?: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -34,7 +36,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   const body = raw as PostBody;
 
-  const { status, guests = 0, note = null } = body;
+  const { status, guests = 0, note = null, game_date } = body;
   if (!status || !VALID_STATUSES.has(status)) {
     return NextResponse.json({ error: "status must be in|out|maybe" }, { status: 400 });
   }
@@ -47,17 +49,27 @@ export async function POST(request: Request): Promise<Response> {
       { status: 400 }
     );
   }
+  if (!game_date || typeof game_date !== "string" || !isValidGameDate(game_date)) {
+    return NextResponse.json({ error: "game_date must be YYYY-MM-DD" }, { status: 400 });
+  }
+
+  if (game_date < getToday()) {
+    const adminCheck = await isCurrentUserAdmin(supabase);
+    if (!adminCheck) {
+      return NextResponse.json({ error: "Cannot edit RSVP on a past date" }, { status: 403 });
+    }
+  }
 
   const { data: game, error: gameErr } = await supabase
     .from("games")
     .select("id, status")
-    .eq("game_date", getToday())
+    .eq("game_date", game_date)
     .maybeSingle();
   if (gameErr) {
     return NextResponse.json({ error: gameErr.message }, { status: 500 });
   }
   if (!game) {
-    return NextResponse.json({ error: "No game today" }, { status: 404 });
+    return NextResponse.json({ error: "No game on that date" }, { status: 404 });
   }
   if (game.status === "cancelled") {
     return NextResponse.json({ error: "Game cancelled" }, { status: 403 });
@@ -98,7 +110,6 @@ export async function GET(request: Request): Promise<Response> {
 
   const admin = createAdminClient();
 
-  // Check game status — don't record RSVPs on cancelled games
   const { data: game, error: gameErr } = await admin
     .from("games")
     .select("id, status")
@@ -111,7 +122,6 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(`${url.origin}/?cancelled=1`);
   }
 
-  // Upsert the RSVP
   const { error: upsertErr } = await admin
     .from("rsvps")
     .upsert(
@@ -122,13 +132,11 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(`${url.origin}/login?error=rsvp-failed`);
   }
 
-  // Fetch email so we can generate a magic link for this user
   const { data: userResult, error: userErr } = await admin.auth.admin.getUserById(p.player_id);
   if (userErr || !userResult.user?.email) {
     return NextResponse.redirect(`${url.origin}/login?error=user-lookup-failed`);
   }
 
-  // Generate a one-time login token (hashed_token) and immediately consume it server-side
   const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email: userResult.user.email,
@@ -137,7 +145,6 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(`${url.origin}/login?error=link-generation-failed`);
   }
 
-  // Use the server client (cookie-aware) to consume the token and set session
   const supabase = await createClient();
   const { error: verifyErr } = await supabase.auth.verifyOtp({
     token_hash: linkData.properties.hashed_token,

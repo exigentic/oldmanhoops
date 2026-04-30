@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import { getToday, isGameDay, getLocalHour, isValidGameDate } from "@/lib/date";
 
 describe("getToday", () => {

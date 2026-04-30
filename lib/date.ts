@@ -1,13 +1,18 @@
 import { DateTime } from "luxon";
 
-// APP_TIMEZONE is a server-only env var (not NEXT_PUBLIC_*). In the browser
-// bundle it resolves to undefined, so we fall back to UTC. All functions that
-// require the real app timezone are either server-only (getToday, isGameDay,
-// getLocalHour) or receive an explicit zone at call-sites where it matters.
-const APP_TIMEZONE: string =
-  typeof process !== "undefined" && process.env?.APP_TIMEZONE
-    ? process.env.APP_TIMEZONE
-    : "UTC";
+// APP_TIMEZONE is a server-only env var (not NEXT_PUBLIC_*). On the server
+// it is required — fail fast if missing. In the browser bundle the var is
+// undefined and we fall back to UTC; the only client caller is
+// `formatGameDate`, which formats date-only inputs whose calendar fields are
+// independent of zone, so the fallback is safe there.
+function resolveAppTimezone(): string {
+  if (typeof window !== "undefined") return "UTC";
+  const tz = process.env.APP_TIMEZONE;
+  if (!tz) throw new Error("Missing required env var: APP_TIMEZONE");
+  return tz;
+}
+
+const APP_TIMEZONE: string = resolveAppTimezone();
 
 export function getToday(now: Date = new Date(), zone: string = APP_TIMEZONE): string {
   const dt = DateTime.fromJSDate(now, { zone });

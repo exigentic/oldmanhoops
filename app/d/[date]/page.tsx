@@ -52,16 +52,19 @@ export default async function HistoricalScoreboard({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
+  const isAdminPromise = user
+    ? isCurrentUserAdmin(supabase, user)
+    : Promise.resolve(false);
   const today = getToday();
-  const isLive = isAdmin || date >= today;
 
   const initial = await getScoreboard(supabase, {
     date,
     includeRoster: !!user,
-    includeNonResponders: isAdmin,
+    includeNonResponders: isAdminPromise,
     userId: user?.id,
   });
+  const isAdmin = await isAdminPromise;
+  const isLive = isAdmin || date >= today;
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-stone-300 text-neutral-900 p-6 pt-8 gap-6">

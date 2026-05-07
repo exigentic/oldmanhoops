@@ -46,10 +46,17 @@ export async function getScoreboard(
   opts: {
     date: string;
     includeRoster: boolean;
-    includeNonResponders?: boolean;
+    // Boolean form is the simple case. Promise form lets the caller fire its
+    // admin check in parallel with this function's game lookup, eliminating a
+    // sequential round-trip for admin views.
+    includeNonResponders?: boolean | Promise<boolean>;
     userId?: string;
   }
 ): Promise<ScoreboardData> {
+  const includeNonResponders: Promise<boolean> = Promise.resolve(
+    opts.includeNonResponders ?? false,
+  ).then((v) => v === true);
+
   const { data: game, error: gameErr } = await supabase
     .from("games")
     .select("id, status, status_reason")
@@ -57,22 +64,40 @@ export async function getScoreboard(
     .maybeSingle();
 
   if (gameErr) throw gameErr;
-  if (!game) return { state: "no-game" };
+  if (!game) {
+    // Drain to avoid an unhandled rejection if the caller's admin check fails
+    // and we return before awaiting the promise.
+    await includeNonResponders.catch(() => {});
+    return { state: "no-game" };
+  }
   if (game.status === "cancelled") {
+    await includeNonResponders.catch(() => {});
     return { state: "cancelled", reason: game.status_reason ?? null };
   }
 
   // Only join `players` when we need names. The `players` table is gated by
   // RLS to authenticated users, so an inner join would zero out anon counts.
-  const { data: rsvps, error: rsvpErr } = opts.includeRoster
-    ? await supabase
+  // Fire the rsvps and active-players queries in parallel — they don't depend
+  // on each other, only on game.id (and the active-players query is gated on
+  // the admin check, which the caller may have started in parallel with us).
+  const rsvpsPromise = opts.includeRoster
+    ? supabase
         .from("rsvps")
         .select("player_id, status, guests, note, players!inner(name)")
         .eq("game_id", game.id)
-    : await supabase
+    : supabase
         .from("rsvps")
         .select("player_id, status, guests, note")
         .eq("game_id", game.id);
+
+  const activePlayersPromise = includeNonResponders.then((yes) =>
+    yes ? supabase.from("players").select("id, name").eq("active", true) : null,
+  );
+
+  const [{ data: rsvps, error: rsvpErr }, activePlayersResult] = await Promise.all([
+    rsvpsPromise,
+    activePlayersPromise,
+  ]);
 
   if (rsvpErr) throw rsvpErr;
 
@@ -112,15 +137,10 @@ export async function getScoreboard(
   }
 
   let nonResponders: { playerId: string; name: string }[] | null = null;
-  if (opts.includeNonResponders) {
-    const { data: activePlayers, error: playersErr } = await supabase
-      .from("players")
-      .select("id, name")
-      .eq("active", true);
-    if (playersErr) throw playersErr;
-
+  if (activePlayersResult) {
+    if (activePlayersResult.error) throw activePlayersResult.error;
     const responderIds = new Set((rsvps ?? []).map((r) => r.player_id));
-    nonResponders = (activePlayers ?? [])
+    nonResponders = (activePlayersResult.data ?? [])
       .filter((p) => !responderIds.has(p.id))
       .map((p) => ({ playerId: p.id as string, name: (p.name as string) ?? "" }))
       .sort((a, b) => a.name.localeCompare(b.name));

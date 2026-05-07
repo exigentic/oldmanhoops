@@ -266,6 +266,50 @@ describe("getScoreboard", () => {
     }
   });
 
+  it("accepts includeNonResponders as a Promise (parallel admin check)", async () => {
+    const date = "2099-05-04";
+    const gameId = await seed(date);
+    const responder = await seedPlayer("sb-test-nr-promise-r@example.com", "Resp");
+    const nonResponder = await seedPlayer("sb-test-nr-promise-nr@example.com", "Pending");
+    try {
+      await seedRsvp(gameId, responder, "in");
+      const result = await getScoreboard(admin, {
+        date,
+        includeRoster: true,
+        includeNonResponders: Promise.resolve(true),
+      });
+      expect(result.state).toBe("scheduled");
+      if (result.state !== "scheduled") return;
+      const ids = (result.nonResponders ?? []).map((n) => n.playerId);
+      expect(ids).toContain(nonResponder);
+      expect(ids).not.toContain(responder);
+    } finally {
+      await cleanup(date);
+      for (const id of [responder, nonResponder]) await admin.auth.admin.deleteUser(id);
+    }
+  });
+
+  it("does not fetch non-responders when the Promise resolves to false", async () => {
+    const date = "2099-05-05";
+    const gameId = await seed(date);
+    const p1 = await seedPlayer("sb-test-nr-false@example.com", "Solo");
+    try {
+      await seedRsvp(gameId, p1, "in");
+      const result = await getScoreboard(admin, {
+        date,
+        includeRoster: true,
+        includeNonResponders: Promise.resolve(false),
+      });
+      expect(result.state).toBe("scheduled");
+      if (result.state === "scheduled") {
+        expect(result.nonResponders).toBeNull();
+      }
+    } finally {
+      await cleanup(date);
+      await admin.auth.admin.deleteUser(p1);
+    }
+  });
+
   it("excludes inactive players from nonResponders", async () => {
     const date = "2099-05-03";
     const gameId = await seed(date);

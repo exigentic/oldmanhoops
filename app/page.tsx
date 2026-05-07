@@ -50,13 +50,18 @@ export default async function Home({
   } = await supabase.auth.getUser();
 
   const today = getToday();
-  const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
+  // Fire admin check in parallel with the scoreboard fetch — getScoreboard
+  // awaits the promise internally to decide whether to fetch non-responders.
+  const isAdminPromise = user
+    ? isCurrentUserAdmin(supabase, user)
+    : Promise.resolve(false);
   const initial = await getScoreboard(supabase, {
     date: today,
     includeRoster: !!user,
-    includeNonResponders: isAdmin,
+    includeNonResponders: isAdminPromise,
     userId: user?.id,
   });
+  const isAdmin = await isAdminPromise;
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-stone-300 text-neutral-900 p-6 pt-8 gap-6">

@@ -17,12 +17,14 @@ export async function GET(request: Request): Promise<Response> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAdmin = user ? await isCurrentUserAdmin(supabase) : false;
+  const isAdminPromise = user
+    ? isCurrentUserAdmin(supabase, user)
+    : Promise.resolve(false);
 
   const data = await getScoreboard(supabase, {
     date,
     includeRoster: !!user,
-    includeNonResponders: isAdmin,
+    includeNonResponders: isAdminPromise,
     userId: user?.id,
   });
 

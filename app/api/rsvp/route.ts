@@ -5,6 +5,7 @@ import { getToday, isValidGameDate } from "@/lib/date";
 import { verifyToken } from "@/lib/hmac";
 import { env } from "@/lib/env";
 import { isCurrentUserAdmin } from "@/lib/auth/admin";
+import { establishEmailSession } from "@/lib/auth/email-session";
 
 const VALID_STATUSES = new Set(["in", "out", "maybe"]);
 
@@ -104,6 +105,9 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(`${url.origin}/login?error=invalid-token`);
   }
   const p = result.payload;
+  if (p.purpose !== "rsvp") {
+    return NextResponse.redirect(`${url.origin}/login?error=token-mismatch`);
+  }
   if (p.player_id !== playerId || p.game_id !== gameId || p.status !== status) {
     return NextResponse.redirect(`${url.origin}/login?error=token-mismatch`);
   }
@@ -132,26 +136,9 @@ export async function GET(request: Request): Promise<Response> {
     return NextResponse.redirect(`${url.origin}/login?error=rsvp-failed`);
   }
 
-  const { data: userResult, error: userErr } = await admin.auth.admin.getUserById(p.player_id);
-  if (userErr || !userResult.user?.email) {
-    return NextResponse.redirect(`${url.origin}/login?error=user-lookup-failed`);
-  }
-
-  const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-    type: "magiclink",
-    email: userResult.user.email,
-  });
-  if (linkErr || !linkData.properties?.hashed_token) {
-    return NextResponse.redirect(`${url.origin}/login?error=link-generation-failed`);
-  }
-
-  const supabase = await createClient();
-  const { error: verifyErr } = await supabase.auth.verifyOtp({
-    token_hash: linkData.properties.hashed_token,
-    type: "magiclink",
-  });
-  if (verifyErr) {
-    return NextResponse.redirect(`${url.origin}/login?error=session-failed`);
+  const session = await establishEmailSession(p.player_id);
+  if (!session.ok) {
+    return NextResponse.redirect(`${url.origin}/login?error=${session.reason}`);
   }
 
   return NextResponse.redirect(`${url.origin}/?status=${p.status}`);

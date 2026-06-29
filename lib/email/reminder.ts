@@ -48,6 +48,12 @@ function buildLink(
   return u.toString();
 }
 
+function buildPeekLink(base: string, token: string): string {
+  const u = new URL("/api/auth/peek", base);
+  u.searchParams.set("token", token);
+  return u.toString();
+}
+
 function button(href: string, label: string, bg: string): string {
   return `
     <a href="${href}"
@@ -64,13 +70,19 @@ export function buildReminderEmail(input: ReminderInput): Email {
 
   const buttons = STATUSES.map((status) => {
     const token = signToken(
-      { player_id: input.playerId, game_id: input.gameId, status, expires_at: expires },
+      { purpose: "rsvp", player_id: input.playerId, game_id: input.gameId, status, expires_at: expires },
       input.hmacSecret
     );
     const href = buildLink(input.baseUrl, input.playerId, input.gameId, status, token);
     const { label, bg } = LABELS[status];
     return button(href, label, bg);
   }).join("\n");
+
+  const peekToken = signToken(
+    { purpose: "login", player_id: input.playerId, expires_at: expires },
+    input.hmacSecret
+  );
+  const peekUrl = buildPeekLink(input.baseUrl, peekToken);
 
   const greeting = input.playerName
     ? `Hey ${escapeHtml(input.playerName)},`
@@ -90,6 +102,12 @@ export function buildReminderEmail(input: ReminderInput): Email {
       <div style="text-align:center;">
         ${buttons}
       </div>
+      <p style="margin:16px 0 0;text-align:center;">
+        <a href="${peekUrl}"
+           style="color:#888;font-size:14px;text-decoration:underline;font-family:system-ui,sans-serif;">
+          Just see who's playing &rarr;
+        </a>
+      </p>
       <p style="margin:24px 0 0;font-size:12px;color:#888;">
         Links expire in 8 hours. Manage preferences at ${safeBase}/settings.
       </p>

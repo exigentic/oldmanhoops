@@ -2,12 +2,22 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export type RsvpStatus = "in" | "out" | "maybe";
 
-export interface TokenPayload {
-  player_id: string;
-  game_id: string;
-  status: RsvpStatus;
-  expires_at: number; // unix ms
-}
+// Signed email tokens come in two flavors, discriminated by `purpose`:
+//   - "rsvp":  records an RSVP for a specific game, then logs the user in.
+//   - "login": logs the user in only ("just see who's playing"). No game/status.
+export type TokenPayload =
+  | {
+      purpose: "rsvp";
+      player_id: string;
+      game_id: string;
+      status: RsvpStatus;
+      expires_at: number; // unix ms
+    }
+  | {
+      purpose: "login";
+      player_id: string;
+      expires_at: number; // unix ms
+    };
 
 export type VerifyResult =
   | { ok: true; payload: TokenPayload }
@@ -22,19 +32,41 @@ function b64urlDecode(s: string): Buffer {
   return Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/") + pad, "base64");
 }
 
+// Wire format is purpose-prefixed, colon-joined positional. player_id/game_id
+// are UUIDs (no colons) so positional splitting is unambiguous.
+//   rsvp  -> "rsvp:<player_id>:<game_id>:<status>:<expires_at>"  (5 parts)
+//   login -> "login:<player_id>:<expires_at>"                    (3 parts)
 function encodePayload(p: TokenPayload): string {
-  return [p.player_id, p.game_id, p.status, String(p.expires_at)].join(":");
+  if (p.purpose === "login") {
+    return ["login", p.player_id, String(p.expires_at)].join(":");
+  }
+  return ["rsvp", p.player_id, p.game_id, p.status, String(p.expires_at)].join(":");
 }
 
 function decodePayload(raw: string): TokenPayload | null {
   const parts = raw.split(":");
-  if (parts.length !== 4) return null;
-  const [player_id, game_id, status, expiresStr] = parts;
-  const expires_at = Number(expiresStr);
-  if (!player_id || !game_id) return null;
-  if (status !== "in" && status !== "out" && status !== "maybe") return null;
-  if (!Number.isFinite(expires_at)) return null;
-  return { player_id, game_id, status, expires_at };
+  const purpose = parts[0];
+
+  if (purpose === "login") {
+    if (parts.length !== 3) return null;
+    const [, player_id, expiresStr] = parts;
+    const expires_at = Number(expiresStr);
+    if (!player_id) return null;
+    if (!Number.isFinite(expires_at)) return null;
+    return { purpose: "login", player_id, expires_at };
+  }
+
+  if (purpose === "rsvp") {
+    if (parts.length !== 5) return null;
+    const [, player_id, game_id, status, expiresStr] = parts;
+    const expires_at = Number(expiresStr);
+    if (!player_id || !game_id) return null;
+    if (status !== "in" && status !== "out" && status !== "maybe") return null;
+    if (!Number.isFinite(expires_at)) return null;
+    return { purpose: "rsvp", player_id, game_id, status, expires_at };
+  }
+
+  return null;
 }
 
 function sign(payloadRaw: string, secret: string): Buffer {

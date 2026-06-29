@@ -51,11 +51,36 @@ describe("buildReminderEmail", () => {
       const v = verifyToken(token, SECRET);
       expect(v.ok).toBe(true);
       if (v.ok) {
-        expect(v.payload.player_id).toBe("player-123");
-        expect(v.payload.game_id).toBe("game-456");
-        expect(v.payload.status).toBe(status);
-        expect(v.payload.expires_at).toBe(NOW + 8 * 60 * 60 * 1000);
+        expect(v.payload.purpose).toBe("rsvp");
+        if (v.payload.purpose === "rsvp") {
+          expect(v.payload.player_id).toBe("player-123");
+          expect(v.payload.game_id).toBe("game-456");
+          expect(v.payload.status).toBe(status);
+          expect(v.payload.expires_at).toBe(NOW + 8 * 60 * 60 * 1000);
+        }
       }
+    }
+  });
+
+  it("embeds a passive login link to /api/auth/peek with a valid login token", () => {
+    const email = buildReminderEmail(baseInput);
+    expect(email.html).toContain("Just see who's playing");
+
+    const hrefs = [...email.html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+    const peekHrefs = hrefs.filter((h) => h.includes("/api/auth/peek"));
+    expect(peekHrefs).toHaveLength(1);
+
+    const url = new URL(peekHrefs[0]);
+    expect(url.origin).toBe("https://oldmanhoops.test");
+    expect(url.pathname).toBe("/api/auth/peek");
+
+    const token = url.searchParams.get("token")!;
+    const v = verifyToken(token, SECRET);
+    expect(v.ok).toBe(true);
+    if (v.ok) {
+      expect(v.payload.purpose).toBe("login");
+      expect(v.payload.player_id).toBe("player-123");
+      expect(v.payload.expires_at).toBe(NOW + 8 * 60 * 60 * 1000);
     }
   });
 

@@ -83,4 +83,54 @@ describe("RsvpControls", () => {
     expect(global.fetch).not.toHaveBeenCalled();
     expect(screen.queryByText(/saved ✓/i)).not.toBeInTheDocument();
   });
+
+  it("opens a confirmation dialog (and does not submit) when changing an already-set status", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls counts={ZERO_COUNTS} current={{ status: "in", guests: 0, note: null }} viewDate="2026-04-30" />);
+    const outCard = screen.getByLabelText(/out count/i).closest("button")!;
+    await user.click(outCard);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/you're currently in\. switch to out\?/i)).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
+    // The original status stays selected while the dialog is open.
+    expect(screen.getByLabelText(/in count/i).closest("button")).toHaveAttribute("aria-pressed", "true");
+    expect(outCard).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("applies the change and submits when the dialog is confirmed", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls counts={ZERO_COUNTS} current={{ status: "in", guests: 0, note: null }} viewDate="2026-04-30" />);
+    await user.click(screen.getByLabelText(/out count/i).closest("button")!);
+    await user.click(screen.getByRole("button", { name: /switch to out/i }));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    expect(body.status).toBe("out");
+    expect(screen.getByLabelText(/out count/i).closest("button")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the original status and does not submit when the dialog is cancelled", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls counts={ZERO_COUNTS} current={{ status: "in", guests: 0, note: null }} viewDate="2026-04-30" />);
+    await user.click(screen.getByLabelText(/out count/i).closest("button")!);
+    await user.click(screen.getByRole("button", { name: /keep in/i }));
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/in count/i).closest("button")).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("does not open a dialog when setting a status for the first time", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls counts={ZERO_COUNTS} current={null} viewDate="2026-04-30" />);
+    await user.click(screen.getByLabelText(/in count/i).closest("button")!);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not open a dialog when re-tapping the already-selected status", async () => {
+    const user = userEvent.setup();
+    render(<RsvpControls counts={ZERO_COUNTS} current={{ status: "in", guests: 0, note: null }} viewDate="2026-04-30" />);
+    await user.click(screen.getByLabelText(/in count/i).closest("button")!);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 });

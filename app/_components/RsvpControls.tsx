@@ -3,6 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import type { CurrentRsvp, RsvpStatus } from "@/lib/scoreboard";
 import { CountCards } from "./CountCards";
+import { ConfirmDialog } from "./ConfirmDialog";
+
+const STATUS_LABEL: Record<RsvpStatus, string> = {
+  in: "In",
+  out: "Out",
+  maybe: "Maybe",
+};
 
 export function RsvpControls({
   counts,
@@ -24,6 +31,7 @@ export function RsvpControls({
   const [submitting, setSubmitting] = useState(false);
   const [noteState, setNoteState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<RsvpStatus | null>(null);
   const noteRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -64,6 +72,21 @@ export function RsvpControls({
   }
 
   function selectStatus(next: RsvpStatus) {
+    // Guard against accidental overwrites: only confirm when replacing an
+    // existing, different status. First-time selection and re-tapping the
+    // current status stay instant.
+    if (status && status !== next) {
+      setPendingStatus(next);
+      return;
+    }
+    setStatus(next);
+    submit({ status: next });
+  }
+
+  function confirmStatusChange() {
+    const next = pendingStatus;
+    setPendingStatus(null);
+    if (!next) return;
     setStatus(next);
     submit({ status: next });
   }
@@ -168,6 +191,18 @@ export function RsvpControls({
         </span>
       </div>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      <ConfirmDialog
+        open={pendingStatus !== null}
+        title={
+          status && pendingStatus
+            ? `You're currently ${STATUS_LABEL[status]}. Switch to ${STATUS_LABEL[pendingStatus]}?`
+            : ""
+        }
+        confirmLabel={pendingStatus ? `Switch to ${STATUS_LABEL[pendingStatus]}` : ""}
+        cancelLabel={status ? `Keep ${STATUS_LABEL[status]}` : "Cancel"}
+        onConfirm={confirmStatusChange}
+        onCancel={() => setPendingStatus(null)}
+      />
     </section>
   );
 }
